@@ -2,6 +2,7 @@ import {vec3} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
+import Particle from './Particle';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -15,33 +16,24 @@ const controls = {
 };
 
 let square: Square;
+let particles: Particle;
 let time: number = 0.0;
 
 function loadScene() {
+
   square = new Square();
+  particles = new Particle();
+  particles.setData();
   square.create();
 
-  // Set up particles here. Hard-coded example data for now
-  let offsetsArray = [];
-  let colorsArray = [];
-  let n: number = 100.0;
-  for(let i = 0; i < n; i++) {
-    for(let j = 0; j < n; j++) {
-      offsetsArray.push(i);
-      offsetsArray.push(j);
-      offsetsArray.push(0);
-
-      colorsArray.push(i / n);
-      colorsArray.push(j / n);
-      colorsArray.push(1.0);
-      colorsArray.push(1.0); // Alpha channel
-    }
-  }
-  let offsets: Float32Array = new Float32Array(offsetsArray);
-  let colors: Float32Array = new Float32Array(colorsArray);
+  let offsets: Float32Array = new Float32Array(particles.getOffsets());
+  let colors: Float32Array = new Float32Array(particles.getColors());
   square.setInstanceVBOs(offsets, colors);
+  let n = particles.getNumParticles();
   square.setNumInstances(n * n); // 10x10 grid of "particles"
+
 }
+
 
 function main() {
   // Initial display for framerate
@@ -87,6 +79,7 @@ function main() {
     lambert.setTime(time++);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
+
     renderer.render(camera, lambert, [
       square,
     ]);
