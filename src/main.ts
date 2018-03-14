@@ -30,8 +30,7 @@ function loadScene() {
   let colors: Float32Array = new Float32Array(particles.getColors());
   square.setInstanceVBOs(offsets, colors);
   let n = particles.getNumParticles();
-  square.setNumInstances(n * n); // 10x10 grid of "particles"
-
+  square.setNumInstances(n * n);
 }
 
 
@@ -79,6 +78,16 @@ function main() {
     lambert.setTime(time++);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
+
+    //particles.applyForce(vec3.fromValues(0, .3, 0));
+    //particles.update(time);
+    //particles.setData();
+    // set square instance data
+    let offsets: Float32Array = new Float32Array(particles.getOffsets());
+    let colors: Float32Array = new Float32Array(particles.getColors());
+    square.setInstanceVBOs(offsets, colors);
+    let n = particles.getNumParticles();
+    square.setNumInstances(n * n);
 
     renderer.render(camera, lambert, [
       square,
