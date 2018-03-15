@@ -79,7 +79,6 @@ function main() {
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
 
-    particles.applyForce(vec3.fromValues(0, 1, 0), vec3.fromValues(0, -10, 0));
     particles.update(time);
     particles.setData();
     // set square instance data
