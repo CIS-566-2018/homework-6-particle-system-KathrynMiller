@@ -59,7 +59,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(50, 50, 0));
+  const camera = new Camera(vec3.fromValues(0, 0, 80), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -79,9 +79,9 @@ function main() {
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
 
-    //particles.applyForce(vec3.fromValues(0, .3, 0));
-    //particles.update(time);
-    //particles.setData();
+    particles.applyForce(vec3.fromValues(0, 1, 0), vec3.fromValues(0, -10, 0));
+    particles.update(time);
+    particles.setData();
     // set square instance data
     let offsets: Float32Array = new Float32Array(particles.getOffsets());
     let colors: Float32Array = new Float32Array(particles.getColors());
