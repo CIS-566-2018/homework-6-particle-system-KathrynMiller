@@ -17,8 +17,8 @@ class Particle {
 
     constructor() {
         // square root of number of particles to start
-        this.numParticles = 10;
-        this.boundingVal = this.numParticles + 8;
+        this.numParticles = 100;
+        this.boundingVal = this.numParticles / 2;
         this.prevTime = 0;
 
         this.velocity = new Array<Array<number>>();
@@ -33,6 +33,7 @@ class Particle {
         let n = this.numParticles;
         for(let i = 0; i < n; i++) {
             for(let j = 0; j < n; j++) {
+                // generate random starting velocity for points
                 let x = Math.random() * this.boundingVal - (this.boundingVal / 2);
                 let y = Math.random() * this.boundingVal - (this.boundingVal / 2);
                 let z = Math.random() * this.boundingVal - (this.boundingVal / 2);
@@ -78,7 +79,7 @@ class Particle {
     }
 
     // updates position data based on time and particle attributes
-    update(time: number, target: vec3, attract: boolean) {
+    update(time: number, target: vec3, attract: boolean, repel: boolean) {
         // verlet integration over each offset
         for(let i = 0; i < this.numParticles * this.numParticles; i++) {               
                 let newPos = vec3.create();
@@ -93,60 +94,112 @@ class Particle {
                 
                 // set previous position to be current position
                 this.prevPos[i] = [this.position[i][0], this.position[i][1], this.position[i][2]];
-                 // set current position to be newly calculated position
+                // if particle is at edge of bounding box, reverse direction
                  if(vec3.length(newPos) > this.boundingVal) {
                     let dir = vec3.create();
+                    let offset = vec3.fromValues(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+                    vec3.scale(offset, offset, .2); // offset for non linear force direction
+                    // vector in direction of motion
                     vec3.subtract(dir, newPos, this.position[i]);
                     newPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
                     vec3.normalize(dir, dir);
+                    // negate to send in opposite direction
                     vec3.scale(dir, dir, -1);
                     vec3.scale(dir, dir, 1 / 10);
-                    acceleration = this.applyParticleForce(dir, i);
+                    vec3.add(dir, offset, dir);
+                    vec3.add(acceleration, acceleration, this.applyParticleForce(dir));
                 }
-                vec3.scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
-                vec3.add(newPos, newPos, accelTerm);
+
                 // if there is a desired target (mouseclick etc.)
                 if(attract) {
-                 //   newPos = this.attractTarget(target, 1, newPos, i);
+                    let attraction = vec3.create();
+                    let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+                    vec3.scale(attraction, this.attractTarget(target, 1, newPos, currPos), 1 / 10);
+                    vec3.add(acceleration, acceleration, attraction);
+
+                } else if (repel) {
+                    let repelForce = vec3.create();
+                    let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+                    vec3.scale(repelForce, this.repelTarget(target, 1, newPos, currPos), 1 / 10);
+                    vec3.add(acceleration, acceleration, repelForce);
                 }
+
+                // at^2 term
+                vec3.scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
+                vec3.add(newPos, newPos, accelTerm);
+
+                // set current position to be newly calculated position
                 this.position[i] = [newPos[0], newPos[1], newPos[2]];
-                this.acceleration[i][0] = this.acceleration[i][1] = this.acceleration[i][2] = 0; 
         }
         this.prevTime = time;
     }
+
     // particles are attracted to source, p, based on strength input
-    attractTarget(target: vec3, strength: number, newPos: vec3, i: number): vec3 {
+    // returns acceleration towards target
+    attractTarget(target: vec3, strength: number, newPos: vec3, currPos: vec3): vec3 {
         //TODO make based on strength
         // maximum distance particles can stray
-        let maxRad = 1.0;
+        let maxRad = 100;
+        let targetVec = vec3.create(); // vector from particle to target
+        let currDir = vec3.create();
+        let dif = vec3.create();
 
-        let targetVec = vec3.create();
-        vec3.subtract(targetVec, newPos, target);
-        vec3.scale(targetVec, targetVec, 10);
-        this.applyParticleForce(targetVec, i);
-        // determine stopping distance for particle
+        vec3.subtract(currDir, newPos, currPos);
+        vec3.subtract(targetVec, target, newPos);
 
-        let dist = vec3.length(targetVec);
-        if(dist <= .01) {
-            newPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+        // if already heading towards the center, don't apply acceleration again
+        if(vec3.dot(currDir, targetVec) > 0) {
+            return vec3.create();
+        } else { // if heading away from target
+            if(vec3.length(targetVec) > maxRad) { // if outside maxRad change direction
+                return this.applyParticleForce(targetVec);
+            } else { // if heading away but inside maxRadius
+                let radius = Math.abs(Math.random() - Math.random()) * maxRad; // radius between 0 and maxRad
+                 // switch direction if straying outside of this "spring" from target
+                if(vec3.length(targetVec) > radius) {
+                    return this.applyParticleForce(targetVec);
+                }
+            }
         }
-        return newPos;
+        return vec3.create();
     }
 
-    // apply random directional forces to all particles
-    // applyRandomForce() {
-    //     let mass = 9;
-    //     for(let i = 0; i < this.numParticles * this.numParticles; i++) {
-    //         let f = vec3.fromValues(Math.random(), Math.random(), Math.random());
-    //         let a = vec3.create();
-    //         vec3.scale(a, f, 1 / mass);
-    //         this.acceleration[i] = [a[0], a[1], a[2]];
-    //     }
-    // }
+    repelTarget(target: vec3, strength: number, newPos: vec3, currPos: vec3) {
+        //TODO make based on strength
+        // maximum distance particles can stray
+        let minRad = 20;
+        let targetVec = vec3.create(); // vector from particle to target
+        let currDir = vec3.create();
+        let dif = vec3.create();
+
+        vec3.subtract(currDir, newPos, currPos);
+        vec3.subtract(targetVec, newPos, target);
+
+        // if already heading towards the center, don't apply acceleration again
+        if(vec3.dot(currDir, targetVec) > 0) {
+            return vec3.create();
+        } else { // if heading towards from target
+            if(vec3.length(targetVec) < minRad) { // if inside minRad change direction
+                //vec3.scale(targetVec, targetVec, 1 / 10);
+                return this.applyParticleForce(targetVec);
+            } else { // if heading away but inside maxRadius
+               /*
+                let radius = Math.abs(Math.random() - Math.random()) * minRad; // radius between 0 and maxRad
+                 // switch direction if straying outside of this "spring" from target
+                if(vec3.length(targetVec) > radius) {
+                    vec3.scale(targetVec, targetVec, 1 / 10);
+                    return this.applyParticleForce(targetVec);
+                }
+                */
+                return vec3.create();
+            }
+        }
+       // return vec3.create();
+    }
 
     // apply a force to a single particle at index i
     // returns the acceleration of the particle
-    applyParticleForce(f: vec3, index: number): vec3 {
+    applyParticleForce(f: vec3): vec3 {
         let mass = 2;
         let a = vec3.create();
         vec3.scale(a, f, 1 / mass);

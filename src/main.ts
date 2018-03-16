@@ -79,7 +79,12 @@ function main() {
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
 
-    particles.update(time, vec3.fromValues(0, 0, 0), true);
+    if(time < 100) {
+      particles.update(time, vec3.fromValues(0, 0, 0), false, false);
+    } else {
+      particles.update(time, vec3.fromValues(0, 0, 0), false, true);
+    }
+    
     particles.setData();
     // set square instance data
     let offsets: Float32Array = new Float32Array(particles.getOffsets());
