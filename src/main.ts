@@ -7,9 +7,12 @@ import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import objLoader from './objLoader';
 
 var OBJ = require('webgl-obj-loader');
 let apple: object;
+
+
 window.onload = function() {
   OBJ.downloadMeshes({
     'apple': './src/objs/apple.obj',
@@ -33,8 +36,13 @@ let repel: boolean = false;
 let target: vec3 = vec3.create();
 let camera: Camera;
 
+let appleVertices: Array<Array<number>>;
+let loader: objLoader;
+
 function loadScene() {
 
+  loader = new objLoader();
+  appleVertices = new Array<Array<number>>();
   square = new Square();
   particles = new Particle();
   particles.setData(vec3.create(), false, false);
@@ -45,6 +53,10 @@ function loadScene() {
   square.setInstanceVBOs(offsets, colors);
   let n = particles.getNumParticles();
   square.setNumInstances(n * n);
+
+  loader.load('./src/objs/apple.obj');
+  appleVertices = loader.getPositions();
+
 }
 // return point at z = 0 from the casted ray direction
 function rayCast(pixel: vec2, origin: vec3): vec3 {
@@ -188,8 +200,8 @@ function main2() {
     if(controls.Meshes.valueOf() == 0.0) {
       particles.update(time, target, 50, attract, repel);
     } else if (controls.Meshes.valueOf() == 1.0) {
-      particles.update(time, target, 1, attract, repel);
-      //particles.formMesh(apple, time);
+      //particles.update(time, target, 1, attract, repel);
+      particles.formMesh(appleVertices, time, target, attract, repel);
     }
     
     //particles.setData(vec3.create());
@@ -223,4 +235,4 @@ function main2() {
   tick();
 }
 
-main2();
+main();

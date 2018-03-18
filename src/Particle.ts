@@ -25,10 +25,11 @@ class Particle {
     color3: number[] = [137.0 / 255.0, 255.0 / 255.0, 133.0 / 255.0, 1.0];
     color4: number[] = [131.0 / 255.0, 227.0 / 255.0, 232.0 / 255.0, 1.0];
     color5: number[] = [138.0 / 255.0, 131.0 / 255.0, 255.0 / 255.0, 1.0];
+    palette: Array<Array<number>> = [this.color1, this.color2, this.color3, this.color4, this.color5];
 
     constructor() {
         // square root of number of particles to start
-        this.numParticles = 100;
+        this.numParticles = 24;
         this.boundingVal = 100;
         this.prevTime = 0;
 
@@ -72,7 +73,7 @@ class Particle {
         let n = this.numParticles;
         this.offsetsArray = [];
         this.colorsArray = [];
-        let colorRange = (this.maxCol - this.minCol) / 5.0;
+        let colorRange = this.boundingVal / 20.0;
         let targetDist = vec3.create();
         let color = [];
         // make target center is there is no user inpute
@@ -84,26 +85,15 @@ class Particle {
             this.offsetsArray.push(this.position[i][0]);
             this.offsetsArray.push(this.position[i][1]);
             this.offsetsArray.push(this.position[i][2]);
-
+            
             vec3.subtract(targetDist, this.position[i], target);
+            let colorIdx = vec3.length(targetDist) % colorRange;
+            color = this.palette[Math.floor(colorIdx)];
 
-            /*
-            if(vec3.length(targetDist) < this.minCol + colorRange) {
-                color = this.color1;
-            } else if(vec3.length(targetDist) < this.minCol + 2 * colorRange) {
-                color = this.color2;
-            } else if (vec3.length(targetDist) < this.minCol + 3 * colorRange) {
-                color = this.color3;
-            } else if (vec3.length(targetDist) < this.minCol + 4 * colorRange) {
-                color = this.color4;
-            } else {
-                color = this.color5;
-            }
-            */
-            this.colorsArray.push(1.0);
-                this.colorsArray.push(1.0);
-                this.colorsArray.push(1.0);
-                this.colorsArray.push(1.0);
+                 this.colorsArray.push(color[0]);
+                 this.colorsArray.push(color[1]);
+                 this.colorsArray.push(color[2]);
+                 this.colorsArray.push(1.0);
             
         }
     }
@@ -159,17 +149,6 @@ class Particle {
                 // at^2 term
                 vec3.scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
                 vec3.add(newPos, newPos, accelTerm);
-
-                // set minCol and maxCol based on method of coloration and the newPos
-                if(attract || repel) {
-                    let dif = vec3.create();
-                    vec3.subtract(dif, newPos, target);
-                    this.minCol = Math.min(this.minCol, vec3.length(dif));
-                    this.maxCol = Math.max(this.maxCol, vec3.length(dif));
-                } else {
-                    this.minCol = Math.min(this.minCol, vec3.length(newPos));
-                    this.maxCol = Math.max(this.maxCol, vec3.length(newPos));
-                }
 
                 // set current position to be newly calculated position
                 this.position[i] = [newPos[0], newPos[1], newPos[2]];
@@ -234,39 +213,37 @@ class Particle {
         return vec3.create();
     }
 
-    formMesh(mesh: any, time: number) {
-        let particleIdx = 0;
+    formMesh(vertices: number[][], time: number, target: vec3, attract: boolean, repel: boolean) {
 
-        for(let i = 0; i < mesh.vertices.length; i+=3) {
+        let i = 0;
+        for(i = 0; i < vertices.length; i++) {
             let newPos = vec3.create();
             let changePos = vec3.create();
             let accelTerm = vec3.create();
             let acceleration = vec3.create();
 
-            let currPos = vec3.fromValues(this.position[particleIdx][0], this.position[particleIdx][1], this.position[particleIdx][2]);
-            let vertex = vec3.fromValues(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
+            let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+            let vertex = vec3.fromValues(vertices[i][0], vertices[i][1], vertices[i][2]);
             // p + (p - p*)
-            vec3.add(newPos, newPos, this.position[particleIdx]);
-            vec3.subtract(changePos, this.position[particleIdx], this.prevPos[particleIdx]);
+            vec3.add(newPos, newPos, this.position[i]);
+            vec3.subtract(changePos, this.position[i], this.prevPos[i]);
             vec3.add(newPos, newPos, changePos);
 
             acceleration = this.attractTarget(vertex, 2, newPos, currPos);
-            //console.log(acceleration);
             vec3.scale(acceleration, acceleration, 1/ 10);
             // at^2 term
             vec3.scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
             vec3.add(newPos, newPos, accelTerm);
 
+            this.prevPos[i] = [currPos[0], currPos[1], currPos[2]];
             // set current position to be newly calculated position
-            this.position[particleIdx] = [newPos[0], newPos[1], newPos[2]];
-            
-            /*
-            let vertex = vec3.fromValues(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
-            this.position[particleIdx] = [vertex[0], vertex[1], vertex[2]];
-            */
-            particleIdx++;
+            this.position[i] = [newPos[0], newPos[1], newPos[2]];
+        }
+        for(let j = i; j < this.position.length; j++) {
+           // this.update(time, target, 50, attract, repel);
         }
         this.prevTime = time;
+        this.setData(vec3.create(), false, false);
     }
 
     // apply a force to a single particle at index i

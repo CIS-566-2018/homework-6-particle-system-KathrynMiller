@@ -1,6 +1,6 @@
 # This file uses centimeters as units for non-parametric coordinates.
 
-mtllib apple.mtl
+
 g default
 v -39.923964 -38.946099 2.590787
 v -36.124893 -38.946099 16.258450
