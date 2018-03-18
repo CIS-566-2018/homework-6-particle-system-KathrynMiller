@@ -6,8 +6,7 @@ class Particle {
     prevTime : number;
     prevPos: Array<Array<number>>;
     Pi: number = 3.1415;
-    velocity: Array<Array<number>>;
-    acceleration: Array<Array<number>>;
+
     position: Array<Array<number>>;
     // number of quads being drawn
     numParticles: number;
@@ -15,14 +14,24 @@ class Particle {
     offsetsArray: number[];
     colorsArray: number[];
 
+    // used for separating particles into bins of colors
+    // if there is a target (attract or repel), base color on dist from target
+    // otherwise based on distance from center
+    maxCol: number = -1000000000000;
+    minCol: number = 1000000000000; 
+
+    color1: number[] = [232.0 / 255.0, 131.0 / 255.0, 214.0 / 255.0, 1.0];
+    color2: number[] = [255.0 / 255.0, 183.0 / 255.0, 150.0 / 255.0, 1.0];
+    color3: number[] = [137.0 / 255.0, 255.0 / 255.0, 133.0 / 255.0, 1.0];
+    color4: number[] = [131.0 / 255.0, 227.0 / 255.0, 232.0 / 255.0, 1.0];
+    color5: number[] = [138.0 / 255.0, 131.0 / 255.0, 255.0 / 255.0, 1.0];
+
     constructor() {
         // square root of number of particles to start
         this.numParticles = 100;
-        this.boundingVal = this.numParticles / 2;
+        this.boundingVal = 100;
         this.prevTime = 0;
 
-        this.velocity = new Array<Array<number>>();
-        this.acceleration = new Array<Array<number>>();
         this.position = new Array<Array<number>>();
         this.prevPos = new Array<Array<number>>();
 
@@ -45,8 +54,6 @@ class Particle {
                 let r1 = Math.random() * 2 * this.Pi - 1;
                 let r2 = Math.random() * 2 * this.Pi - 1;
                 let r3 = Math.random() * 2 * this.Pi - 1;
-                this.acceleration.push([r1, r2, r3]);
-                this.velocity.push([0, 0, 0]);
 
                 this.offsetsArray.push(x);
                 this.offsetsArray.push(y);
@@ -61,25 +68,48 @@ class Particle {
     }
     // set data of colors and offsets
     // used to set data of square instances in main.ts
-    setData() {
+    setData(target: vec3, attract: boolean, repel: boolean) {
         let n = this.numParticles;
         this.offsetsArray = [];
         this.colorsArray = [];
+        let colorRange = (this.maxCol - this.minCol) / 5.0;
+        let targetDist = vec3.create();
+        let color = [];
+        // make target center is there is no user inpute
+        if(!attract && !repel) {
+            target = vec3.create();
+        }
         for(let i = 0; i < n * n; i++) {
 
             this.offsetsArray.push(this.position[i][0]);
             this.offsetsArray.push(this.position[i][1]);
             this.offsetsArray.push(this.position[i][2]);
 
-            this.colorsArray.push(0.0);
+            vec3.subtract(targetDist, this.position[i], target);
+
+            /*
+            if(vec3.length(targetDist) < this.minCol + colorRange) {
+                color = this.color1;
+            } else if(vec3.length(targetDist) < this.minCol + 2 * colorRange) {
+                color = this.color2;
+            } else if (vec3.length(targetDist) < this.minCol + 3 * colorRange) {
+                color = this.color3;
+            } else if (vec3.length(targetDist) < this.minCol + 4 * colorRange) {
+                color = this.color4;
+            } else {
+                color = this.color5;
+            }
+            */
             this.colorsArray.push(1.0);
-            this.colorsArray.push(1.0);
-            this.colorsArray.push(1.0);
+                this.colorsArray.push(1.0);
+                this.colorsArray.push(1.0);
+                this.colorsArray.push(1.0);
+            
         }
     }
 
     // updates position data based on time and particle attributes
-    update(time: number, target: vec3, attract: boolean, repel: boolean) {
+    update(time: number, target: vec3, strength: number, attract: boolean, repel: boolean) {
         // verlet integration over each offset
         for(let i = 0; i < this.numParticles * this.numParticles; i++) {               
                 let newPos = vec3.create();
@@ -94,11 +124,26 @@ class Particle {
                 
                 // set previous position to be current position
                 this.prevPos[i] = [this.position[i][0], this.position[i][1], this.position[i][2]];
+                
+                // if there is a desired target (mouseclick etc.)
+                if(attract) {
+                    let attraction = vec3.create();
+                    let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+                    vec3.scale(attraction, this.attractTarget(target, strength, newPos, currPos), 1 / 100);
+                    vec3.add(acceleration, acceleration, attraction);
+
+                } else if (repel) {
+                    let repelForce = vec3.create();
+                    let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+                    vec3.scale(repelForce, this.repelTarget(target, strength, newPos, currPos), 1 / 50);
+                    vec3.add(acceleration, acceleration, repelForce);
+                } 
+
                 // if particle is at edge of bounding box, reverse direction
                  if(vec3.length(newPos) > this.boundingVal) {
                     let dir = vec3.create();
                     let offset = vec3.fromValues(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
-                    vec3.scale(offset, offset, .2); // offset for non linear force direction
+                    vec3.scale(offset, offset, .2); // offset for non-linear force direction
                     // vector in direction of motion
                     vec3.subtract(dir, newPos, this.position[i]);
                     newPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
@@ -107,31 +152,32 @@ class Particle {
                     vec3.scale(dir, dir, -1);
                     vec3.scale(dir, dir, 1 / 10);
                     vec3.add(dir, offset, dir);
-                    vec3.add(acceleration, acceleration, this.applyParticleForce(dir));
-                }
-
-                // if there is a desired target (mouseclick etc.)
-                if(attract) {
-                    let attraction = vec3.create();
-                    let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
-                    vec3.scale(attraction, this.attractTarget(target, 1, newPos, currPos), 1 / 10);
-                    vec3.add(acceleration, acceleration, attraction);
-
-                } else if (repel) {
-                    let repelForce = vec3.create();
-                    let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
-                    vec3.scale(repelForce, this.repelTarget(target, 1, newPos, currPos), 1 / 10);
-                    vec3.add(acceleration, acceleration, repelForce);
+                    acceleration = this.applyParticleForce(dir);
+                    //vec3.add(acceleration, acceleration, this.applyParticleForce(dir));
                 }
 
                 // at^2 term
                 vec3.scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
                 vec3.add(newPos, newPos, accelTerm);
 
+                // set minCol and maxCol based on method of coloration and the newPos
+                if(attract || repel) {
+                    let dif = vec3.create();
+                    vec3.subtract(dif, newPos, target);
+                    this.minCol = Math.min(this.minCol, vec3.length(dif));
+                    this.maxCol = Math.max(this.maxCol, vec3.length(dif));
+                } else {
+                    this.minCol = Math.min(this.minCol, vec3.length(newPos));
+                    this.maxCol = Math.max(this.maxCol, vec3.length(newPos));
+                }
+
                 // set current position to be newly calculated position
                 this.position[i] = [newPos[0], newPos[1], newPos[2]];
         }
         this.prevTime = time;
+
+        // pass data to final arrays
+        this.setData(target, attract, repel);
     }
 
     // particles are attracted to source, p, based on strength input
@@ -139,14 +185,14 @@ class Particle {
     attractTarget(target: vec3, strength: number, newPos: vec3, currPos: vec3): vec3 {
         //TODO make based on strength
         // maximum distance particles can stray
-        let maxRad = 100;
+        let maxRad = strength;
         let targetVec = vec3.create(); // vector from particle to target
         let currDir = vec3.create();
         let dif = vec3.create();
 
         vec3.subtract(currDir, newPos, currPos);
         vec3.subtract(targetVec, target, newPos);
-
+        
         // if already heading towards the center, don't apply acceleration again
         if(vec3.dot(currDir, targetVec) > 0) {
             return vec3.create();
@@ -175,26 +221,52 @@ class Particle {
         vec3.subtract(currDir, newPos, currPos);
         vec3.subtract(targetVec, newPos, target);
 
-        // if already heading towards the center, don't apply acceleration again
-        if(vec3.dot(currDir, targetVec) > 0) {
-            return vec3.create();
-        } else { // if heading towards from target
-            if(vec3.length(targetVec) < minRad) { // if inside minRad change direction
-                //vec3.scale(targetVec, targetVec, 1 / 10);
+        vec3.subtract(dif, target, newPos);
+        
+        // if inside circle
+        if(vec3.length(dif) < minRad) {
+            if(vec3.dot(targetVec, newPos) > 0) { // heading away from center
                 return this.applyParticleForce(targetVec);
-            } else { // if heading away but inside maxRadius
-               /*
-                let radius = Math.abs(Math.random() - Math.random()) * minRad; // radius between 0 and maxRad
-                 // switch direction if straying outside of this "spring" from target
-                if(vec3.length(targetVec) > radius) {
-                    vec3.scale(targetVec, targetVec, 1 / 10);
-                    return this.applyParticleForce(targetVec);
-                }
-                */
-                return vec3.create();
-            }
+            } else { // heading towards center
+                return this.applyParticleForce(targetVec);
+            } 
+        } 
+        return vec3.create();
+    }
+
+    formMesh(mesh: any, time: number) {
+        let particleIdx = 0;
+
+        for(let i = 0; i < mesh.vertices.length; i+=3) {
+            let newPos = vec3.create();
+            let changePos = vec3.create();
+            let accelTerm = vec3.create();
+            let acceleration = vec3.create();
+
+            let currPos = vec3.fromValues(this.position[particleIdx][0], this.position[particleIdx][1], this.position[particleIdx][2]);
+            let vertex = vec3.fromValues(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
+            // p + (p - p*)
+            vec3.add(newPos, newPos, this.position[particleIdx]);
+            vec3.subtract(changePos, this.position[particleIdx], this.prevPos[particleIdx]);
+            vec3.add(newPos, newPos, changePos);
+
+            acceleration = this.attractTarget(vertex, 2, newPos, currPos);
+            //console.log(acceleration);
+            vec3.scale(acceleration, acceleration, 1/ 10);
+            // at^2 term
+            vec3.scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
+            vec3.add(newPos, newPos, accelTerm);
+
+            // set current position to be newly calculated position
+            this.position[particleIdx] = [newPos[0], newPos[1], newPos[2]];
+            
+            /*
+            let vertex = vec3.fromValues(mesh.vertices[i], mesh.vertices[i + 1], mesh.vertices[i + 2]);
+            this.position[particleIdx] = [vertex[0], vertex[1], vertex[2]];
+            */
+            particleIdx++;
         }
-       // return vec3.create();
+        this.prevTime = time;
     }
 
     // apply a force to a single particle at index i
