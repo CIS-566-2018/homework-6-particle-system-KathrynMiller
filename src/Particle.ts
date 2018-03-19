@@ -29,7 +29,7 @@ class Particle {
 
     constructor() {
         // square root of number of particles to start
-        this.numParticles = 24;
+        this.numParticles = 50;
         this.boundingVal = 100;
         this.prevTime = 0;
 
@@ -99,7 +99,7 @@ class Particle {
     }
 
     // updates position data based on time and particle attributes
-    update(time: number, target: vec3, strength: number, attract: boolean, repel: boolean) {
+    update(time: number, target: vec3, strength: number, attract: boolean, repel: boolean, vertices: number[][], mesh: boolean) {
         // verlet integration over each offset
         for(let i = 0; i < this.numParticles * this.numParticles; i++) {               
                 let newPos = vec3.create();
@@ -112,22 +112,31 @@ class Particle {
                 vec3.subtract(changePos, this.position[i], this.prevPos[i]);
                 vec3.add(newPos, newPos, changePos);
                 
+                let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
                 // set previous position to be current position
                 this.prevPos[i] = [this.position[i][0], this.position[i][1], this.position[i][2]];
-                
+
                 // if there is a desired target (mouseclick etc.)
                 if(attract) {
                     let attraction = vec3.create();
-                    let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
-                    vec3.scale(attraction, this.attractTarget(target, strength, newPos, currPos), 1 / 100);
+                    vec3.scale(attraction, this.attractTarget(target, strength, newPos, currPos), 1 / 50);
                     vec3.add(acceleration, acceleration, attraction);
 
                 } else if (repel) {
                     let repelForce = vec3.create();
-                    let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
                     vec3.scale(repelForce, this.repelTarget(target, strength, newPos, currPos), 1 / 50);
                     vec3.add(acceleration, acceleration, repelForce);
                 } 
+
+                // see if particle should form to mesh
+                if(mesh) {
+                    if(i < vertices.length) {
+                        let meshForce = vec3.create();
+                        let vertex = vec3.fromValues(vertices[i][0], vertices[i][1], vertices[i][2]);
+                        vec3.scale(meshForce, this.attractTarget(vertex, 2, newPos, currPos), 1 / 10);
+                        vec3.add(acceleration, acceleration, meshForce);
+                    }
+                }
 
                 // if particle is at edge of bounding box, reverse direction
                  if(vec3.length(newPos) > this.boundingVal) {
@@ -156,7 +165,40 @@ class Particle {
         this.prevTime = time;
 
         // pass data to final arrays
-        this.setData(target, attract, repel);
+        //this.setData(target, attract, repel);
+    }
+
+    formMesh(vertices: number[][], time: number, target: vec3, attract: boolean, repel: boolean) {
+
+        let i = 0;
+        for(i = 0; i < vertices.length; i++) {
+            let newPos = vec3.create();
+            let changePos = vec3.create();
+            let accelTerm = vec3.create();
+            let acceleration = vec3.create();
+
+            let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+            let vertex = vec3.fromValues(vertices[i][0], vertices[i][1], vertices[i][2]);
+            // p + (p - p*)
+            vec3.add(newPos, newPos, this.position[i]);
+            vec3.subtract(changePos, this.position[i], this.prevPos[i]);
+            vec3.add(newPos, newPos, changePos);
+
+            acceleration = this.attractTarget(vertex, 2, newPos, currPos);
+            vec3.scale(acceleration, acceleration, 1/ 10);
+            // at^2 term
+            vec3.scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
+            vec3.add(newPos, newPos, accelTerm);
+
+            this.prevPos[i] = [currPos[0], currPos[1], currPos[2]];
+            // set current position to be newly calculated position
+            this.position[i] = [newPos[0], newPos[1], newPos[2]];
+        }
+        for(let j = i; j < this.position.length; j++) {
+           // this.update(time, target, 50, attract, repel);
+        }
+        this.prevTime = time;
+       // this.setData(vec3.create(), false, false);
     }
 
     // particles are attracted to source, p, based on strength input
@@ -211,39 +253,6 @@ class Particle {
             } 
         } 
         return vec3.create();
-    }
-
-    formMesh(vertices: number[][], time: number, target: vec3, attract: boolean, repel: boolean) {
-
-        let i = 0;
-        for(i = 0; i < vertices.length; i++) {
-            let newPos = vec3.create();
-            let changePos = vec3.create();
-            let accelTerm = vec3.create();
-            let acceleration = vec3.create();
-
-            let currPos = vec3.fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
-            let vertex = vec3.fromValues(vertices[i][0], vertices[i][1], vertices[i][2]);
-            // p + (p - p*)
-            vec3.add(newPos, newPos, this.position[i]);
-            vec3.subtract(changePos, this.position[i], this.prevPos[i]);
-            vec3.add(newPos, newPos, changePos);
-
-            acceleration = this.attractTarget(vertex, 2, newPos, currPos);
-            vec3.scale(acceleration, acceleration, 1/ 10);
-            // at^2 term
-            vec3.scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
-            vec3.add(newPos, newPos, accelTerm);
-
-            this.prevPos[i] = [currPos[0], currPos[1], currPos[2]];
-            // set current position to be newly calculated position
-            this.position[i] = [newPos[0], newPos[1], newPos[2]];
-        }
-        for(let j = i; j < this.position.length; j++) {
-           // this.update(time, target, 50, attract, repel);
-        }
-        this.prevTime = time;
-        this.setData(vec3.create(), false, false);
     }
 
     // apply a force to a single particle at index i

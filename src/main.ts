@@ -9,18 +9,6 @@ import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import objLoader from './objLoader';
 
-var OBJ = require('webgl-obj-loader');
-let apple: object;
-
-
-window.onload = function() {
-  OBJ.downloadMeshes({
-    'apple': './src/objs/apple.obj',
-  }, function(meshes: any) {
-    apple = meshes.apple;
-    main2();
-  });
-}
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
@@ -143,9 +131,8 @@ function mouseUp(event: MouseEvent): void {
   target = vec3.create();
 }
 
-function main(){}
 
-function main2() {
+function main() {
   // Initial display for framerate
   const stats = Stats();
   stats.setMode(0);
@@ -198,12 +185,12 @@ function main2() {
     renderer.clear();
 
     if(controls.Meshes.valueOf() == 0.0) {
-      particles.update(time, target, 50, attract, repel);
+      particles.update(time, target, 50, attract, repel, [], false);
     } else if (controls.Meshes.valueOf() == 1.0) {
       //particles.update(time, target, 1, attract, repel);
-      particles.formMesh(appleVertices, time, target, attract, repel);
+      particles.update(time, target, 50, attract, repel, appleVertices, true);
     }
-    
+    particles.setData(target, attract, repel);
     //particles.setData(vec3.create());
     // set square instance data
     let offsets: Float32Array = new Float32Array(particles.getOffsets());
