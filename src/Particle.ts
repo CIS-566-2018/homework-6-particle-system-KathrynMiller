@@ -241,25 +241,14 @@ class Particle {
     }
 
     repelTarget(target: vec3, strength: number, newPos: vec3, currPos: vec3) {
-        //TODO make based on strength
         // maximum distance particles can stray
-        let minRad = 20;
+        let minRad = strength;
         let targetVec = vec3.create(); // vector from particle to target
-        let currDir = vec3.create();
-        let dif = vec3.create();
-
-        vec3.subtract(currDir, newPos, currPos);
         vec3.subtract(targetVec, newPos, target);
-
-        vec3.subtract(dif, target, newPos);
         
         // if inside circle
-        if(vec3.length(dif) < minRad) {
-            if(vec3.dot(targetVec, newPos) > 0) { // heading away from center
-                return this.applyParticleForce(targetVec);
-            } else { // heading towards center
-                return this.applyParticleForce(targetVec);
-            } 
+        if(vec3.length(targetVec) < minRad) {
+            return this.applyParticleForce(targetVec);
         } 
         return vec3.create();
     }

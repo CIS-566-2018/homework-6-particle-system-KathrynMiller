@@ -30,6 +30,9 @@ let camera: Camera;
 let lotusVertices: Array<Array<number>>;
 let vaseVertices: Array<Array<number>>;
 let roseVertices: Array<Array<number>>;
+let beeVertices: Array<Array<number>>;
+let storkVertices: Array<Array<number>>;
+let canVertices: Array<Array<number>>;
 let loader: objLoader;
 
 function loadScene() {
@@ -38,6 +41,10 @@ function loadScene() {
   lotusVertices = new Array<Array<number>>();
   vaseVertices = new Array<Array<number>>();
   roseVertices = new Array<Array<number>>();
+  beeVertices = new Array<Array<number>>();
+  storkVertices = new Array<Array<number>>();
+  canVertices = new Array<Array<number>>();
+
   square = new Square();
   particles = new Particle();
   particles.setData(vec3.create(), false, false);
@@ -55,6 +62,13 @@ function loadScene() {
   vaseVertices = loader.getPositions();
   loader.load('./src/objs/rose.obj');
   roseVertices = loader.getPositions();
+  loader.load('./src/objs/bee.obj');
+  beeVertices = loader.getPositions();
+  loader.load('./src/objs/stork.obj');
+  storkVertices = loader.getPositions();
+  loader.load('./src/objs/wateringCan.obj');
+  canVertices = loader.getPositions();
+
 
 }
 // return point at z = 0 from the casted ray direction
@@ -141,7 +155,7 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
-  let mesh = gui.add(controls, 'Meshes', { 'None': 0.0, 'Lotus': 1.0, 'Flower': 2.0, 'Rose': 3.0} );
+  let mesh = gui.add(controls, 'Meshes', { 'None': 0.0, 'Lotus': 1.0, 'Flower': 2.0, 'Rose': 3.0, 'Bee': 4.0, 'Stork': 5.0, "WateringCan": 6.0} );
   let attractionStrength = gui.add(controls, 'attraction', 0.0, 1.0);
 
   // get canvas and webgl context
@@ -203,6 +217,12 @@ function main() {
       particles.update(time, target, strength, attract, repel, vaseVertices, true);
     } else if (controls.Meshes.valueOf() == 3.0) {
       particles.update(time, target, strength, attract, repel, roseVertices, true);
+    } else if (controls.Meshes.valueOf() == 4.0) {
+      particles.update(time, target, strength, attract, repel, beeVertices, true);
+    } else if (controls.Meshes.valueOf() == 5.0) {
+      particles.update(time, target, strength, attract, repel, storkVertices, true);
+    } else if (controls.Meshes.valueOf() == 6.0) {
+      particles.update(time, target, strength, attract, repel, canVertices, true);
     }
     particles.setData(target, attract, repel); 
 

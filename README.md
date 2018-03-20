@@ -3,6 +3,11 @@
 
 ![](lotus.png)
 
+![](bee.png)
+
+![](rose.png)
+
+
 ## Particle collection
 
 I created a Particles class which handled all of the operations on my particles such as attraction, mesh formation, and also handled setting the offset and color data for each square representing a particle. In order to get my particles to move, I used Verlet integration and created a method that would apply a force to each particle and return the correct acceleration. In order to use Verlet, I needed to store all current and previous positions of each particle as well as the previous time value. The particles only had an acceleration when a force was being acted on them. Otherwise their velocity was determined by their current and previous position.
