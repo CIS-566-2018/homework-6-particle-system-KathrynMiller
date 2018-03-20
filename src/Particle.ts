@@ -30,7 +30,7 @@ class Particle {
     constructor() {
         // square root of number of particles to start
         this.numParticles = 100;
-        this.boundingVal = 100;
+        this.boundingVal = 99;
         this.prevTime = 0;
 
         this.position = new Array<Array<number>>();
@@ -87,7 +87,10 @@ class Particle {
             this.offsetsArray.push(this.position[i][2]);
             
             vec3.subtract(targetDist, this.position[i], target);
-            let colorIdx = vec3.length(targetDist) % colorRange;
+            let colorIdx = vec3.length(targetDist) / 20;
+            if(vec3.length(targetDist) > 94) {
+                colorIdx = 4;
+            }
             color = this.palette[Math.floor(colorIdx)];
 
                  this.colorsArray.push(color[0]);

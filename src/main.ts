@@ -58,66 +58,25 @@ function loadScene() {
 
 }
 // return point at z = 0 from the casted ray direction
-function rayCast(pixel: vec2, origin: vec3, camera: Camera): vec3 {
+function rayCast(pixel: vec2, camera: Camera): vec3 {
+
+  var targetDist = vec3.create();
+  let v = vec3.create();
+  let h = vec3.create();
+
+  vec3.subtract(targetDist, camera.target, camera.position);
+  var len = vec3.length(targetDist);
   
-  // convert to ndc 
-    vec2.scale(pixel, pixel, 2.0);
-    vec2.subtract(pixel, pixel, vec2.fromValues(window.innerWidth, window.innerHeight));
-    vec2.scale(pixel, pixel, 1 / window.innerHeight);
+  vec3.scale(v, camera.up, Math.tan(camera.fovy / 2.0) * len);
+  vec3.scale(h, camera.right, Math.tan(camera.fovy / 2.0) * len * camera.aspectRatio);
+  
+  vec3.scale(v, v, pixel[1]);
+  vec3.scale(h, h, pixel[0]);
 
-    let ref = vec3.create();
-    let camLook = vec3.create();
-    vec3.subtract(camLook, ref, origin);
-    vec3.normalize(camLook, camLook);
-
-    let camRight = vec3.create();
-    vec3.cross(camRight, camLook, vec3.fromValues(0.0, 1.0, 0.0))
-    vec3.normalize(camRight, camRight);
-
-    let camUp = vec3.create();
-    vec3.cross(camUp, camRight, camLook);
-    vec3.normalize(camUp, camUp);
-
-    let rayPoint = vec3.create();
-    vec3.scale(camRight, camRight, pixel[0]);
-    vec3.scale(camUp, camUp, pixel[1]);
-    vec3.add(rayPoint, camRight, camUp);
-    vec3.add(rayPoint, ref, rayPoint);
-
-    let rayDir = vec3.create();
-    vec3.subtract(rayDir, rayPoint, origin);
-    vec3.normalize(rayDir, rayDir);
-
-    let point = vec3.create();
-    let t = -origin[2] / rayDir [2];
-    let x = origin[0] + t * rayDir[0];
-    let y = origin[1] + t * rayDir[1];
-
-    return vec3.fromValues(x, y, 0);
-    
-    // ndc coordinates
-   /* 
-    vec2.scale(pixel, pixel, 2.0);
-    vec2.subtract(pixel, pixel, vec2.fromValues(window.innerWidth, window.innerHeight));
-    vec2.scale(pixel, pixel, 1 / window.innerHeight);
-
-
-    let worldPoint = vec3.fromValues(pixel[0], pixel[1], 1.0);
-    vec3.scale(worldPoint, worldPoint, 1000);
-    vec3.transformMat4(worldPoint, worldPoint, camera.getInvViewProj());
-
-    let rayDir = vec3.create();
-    vec3.subtract(rayDir, worldPoint, origin);
-    vec3.normalize(rayDir, rayDir);
-console.log(rayDir);
-// 0 = rayOrigin[2] + t * rayDir[2]
-    let t = -origin[2] / rayDir [2];
-    console.log("t: " + t);
-    let x = origin[0] + t * rayDir[0];
-    let y = origin[1] + t * rayDir[1];
-console.log(x +  "  " + y + " ");
-    return vec3.fromValues(x, y, 0);
-    */
+  var point = vec3.create();
+  vec3.add(point, h, v);
+  vec3.add(point, point, camera.target);
+  return point;
 
 }
 
@@ -127,14 +86,16 @@ function mouseDrag(event: MouseEvent): void {
 
   x -= canvas.offsetLeft;
   y -= canvas.offsetTop;
-
+  // convert to ndc
+  x = (x / canvas.width) * 2 - 1;
+  y = (y / canvas.height) * -2 + 1;
   // tell particles to repel or attract based on mouse button clicked
   if(event.button == 0) {
-    target = rayCast(vec2.fromValues(x, y), camera.position,camera);
+    target = rayCast(vec2.fromValues(x, y),camera);
     attract = true;
     repel = false;
   } else if (event.button == 2) {
-    target = rayCast(vec2.fromValues(x, y), camera.position, camera);
+    target = rayCast(vec2.fromValues(x, y), camera);
     repel = true;
     attract = false;
   }
@@ -147,14 +108,16 @@ function mouseDown(event: MouseEvent): void {
 
   x -= canvas.offsetLeft;
   y -= canvas.offsetTop;
-
+  // convert to ndc
+  x = (x / canvas.width) * 2 - 1;
+  y = (y / canvas.height) * -2 + 1;
   // tell particles to repel or attract based on mouse button clicked
   if(event.button == 0) {
-    target = rayCast(vec2.fromValues(x, y), camera.position, camera);
+    target = rayCast(vec2.fromValues(x, y), camera);
     attract = true;
     repel = false;
   } else if (event.button == 2) {
-    target = rayCast(vec2.fromValues(x, y), camera.position, camera);
+    target = rayCast(vec2.fromValues(x, y), camera);
     repel = true;
     attract = false;
   }

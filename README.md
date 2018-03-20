@@ -8,7 +8,7 @@
 I created a Particles class which handled all of the operations on my particles such as attraction, mesh formation, and also handled setting the offset and color data for each square representing a particle. In order to get my particles to move, I used Verlet integration and created a method that would apply a force to each particle and return the correct acceleration. In order to use Verlet, I needed to store all current and previous positions of each particle as well as the previous time value. The particles only had an acceleration when a force was being acted on them. Otherwise their velocity was determined by their current and previous position.
 
 
-## Procedural coloration and shaping of particles (15 points)
+## Procedural coloration and shaping of particles
 
 Using Adobe's color palette tool I chose five colors of the same brightness but different hue to create a pastel palette. Each particle is colored based on it's distance from the center of the screen unless there is an attractive or repeling force due to the user. In this case, the particles are colored based on their distance from the intended target. 
 
