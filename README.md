@@ -1,43 +1,31 @@
 
-# Project 6: Particle System
+# Kathryn Miller
 
-**Goal:** to make physics-based procedural animation of particles and to practice using OpenGL's instanced rendering system.
+![](lotus.png)
 
-**Inspiration:** DMD and CGGT alumnus Nop Jiarathanakul's [Particle Dream application](http://www.iamnop.com/particles/).
+## Particle collection
 
-## Particle collection (30 points)
-Add whatever code you feel is necessary to your Typescript files to support a collection of particles that move over time and interact with various forces in the environment. Something like a `Particle` class could be helpful, but is not strictly necessary. At minimum, each particle should track position, velocity, and acceleration, and make use of an accurate time step value from within `main.ts`'s `tick()` function. You may use any integration method you see fit, such as Euler, Verlet, or Runge-Kutta.
+I created a Particles class which handled all of the operations on my particles such as attraction, mesh formation, and also handled setting the offset and color data for each square representing a particle. In order to get my particles to move, I used Verlet integration and created a method that would apply a force to each particle and return the correct acceleration. In order to use Verlet, I needed to store all current and previous positions of each particle as well as the previous time value. The particles only had an acceleration when a force was being acted on them. Otherwise their velocity was determined by their current and previous position.
 
-You'll probably want to test your code on a small set of particles at first, and with some simple directional forces just to make sure your particles move
-as expected.
 
 ## Procedural coloration and shaping of particles (15 points)
-Your particles' colors should be determined in some procedural manner, whether it's based on velocity, time, position, or distance to target point. Your particle coloration scheme should follow one of the color palette techniques discussed in Tuesday's class so that your particle collection seems coherently colored. The shape of your particles may be whatever you wish (you're not limited to the basic gradiated circle we provided in the base code). You can even use a texture on your particle surface if you wish. Feel free to set up another instanced data VBO to vary the shape of your particles within the same scene.
 
-## Interactive forces (25 points)
-Allow the user to click on the scene to attract and repel particles from the cursor (consider ray-casting from the clicked point to place a 3D point in the scene from which particles can flee or move towards).
+Using Adobe's color palette tool I chose five colors of the same brightness but different hue to create a pastel palette. Each particle is colored based on it's distance from the center of the screen unless there is an attractive or repeling force due to the user. In this case, the particles are colored based on their distance from the intended target. 
 
-You might also consider allowing the user the option of activating "force fields", i.e. invisible 3D noise functions that act as forces on the particles as they move through the scene. You might even consider implementing something like [curl noise](https://petewerner.blogspot.com/2015/02/intro-to-curl-noise.html) to move your particles. Creating a visualization of these fields by drawing small `GL_LINES` in the direction of the force every N units in the world may be helpful for determining if your code works as expected.
+## Interactive forces
 
-## Mesh surface attraction (20 points)
-Give the user the option of selecting a mesh from a drop-down menu in your GUI and have a subset of your particles become attracted to points on the surface of the mesh. To start, try just having each vertex on the mesh attract one unique particle in your collection. For extra credit, try generating points on the surfaces of the mesh faces that will attract more particles. Consider this method of warping a 2D point with X, Y values in the range [0, 1) to the barycentric coordinates (u, v) of any arbitrary triangle:
+In order to keep all of my particles from drifting off screen, I force them to stay within a sphere by testing their future positions distance from the center and applying a force in the opposite direction of their movement (with a small offset for non linear motion) if the position was outside the radius of the circle. 
 
-`(u, v) = (1 - sqrt(x), y * sqrt(x))`
+### Attracting Particles
 
-You can map these (u, v) coordinates to a point on any triangle using this method from `Physically Based Rendering From Theory to Implementation, Third Edition`'s chapter on triangle meshes:
+In order to have my particles flock to a particular target, I split the particle motion into two initial cases. I found the current direction of movement by subtracting the current future position from its prospective future one. If this dotted with the vector from the particle to the target was positive, the particle was already heading towards the target so I didn't apply any force. If the dot product was negative, I applied a force in the direction of the target in order to turn the particle around. However, I didn't want all of the points to end up exactly on the target so I employed a sort of spring system based on the input strength of attraction. If a particle was heading away from the target but was within some randomly assigned radius, (with the maximum radius being dependent on the input attraction strenght) I did nothing. Otherwise I reversed the particle direction. So, by toggling with the attraction strength in the gui, the user can change the radius that the particles will eventually converge to. 
 
-![](pbrt.jpg)
+### Repelling Particles
 
-Consider pre-generating these mesh attractor points at load time so your program runs in real time as you swap out meshes.
+Repelling the particles from a target was much simpler as I just said if a particle was within a certain radius, accelerate it away from the target.
 
-## \~\*\~\*\~A E S T H E T I C\~\*\~\*\~ (10 points)
-As always, the artistic merit of your project plays a small role in your grade. The more interesting, varied, and procedural your project is, the higher your grade will be. Go crazy, make it vaporwave themed or something! Don't neglect the background of your scene; a static gray backdrop is pretty boring!
 
-## Extra credit (50 points max)
-* (5 - 15 points) Allow the user to place attractors and repulsors in the scene that influence the motion of the particles. The more variations of influencers you add, the more points you'll receive. Consider adding influencers that do not act uniformly in all directions, or that are not simply points in space but volumes. They should be visible in the scene in some manner.
-* (7 points) Have particles stretch along their velocity vectors to imitate motion blur.
-* (5 - 15 points) Allow particles to collide with and bounce off of obstacles in the scene. The more complex the shapes you collide particles with, the more points you'll earn.
-* (30 points) Animate a mesh and have the particles move along with the animation.
-* (15 points) Create a "flocking" mode for your scene where a smaller collection of particles moves around the environment following the [rules for flocking](https://en.wikipedia.org/wiki/Boids).
-* (15 points) Use audio to drive an attribute of your particles, whether that be color, velocity, size, shape, or something else!
-* (50 points) Create a cloth simulation mode for your scene where you attach particles to each other in a grid using infinitely stiff springs, and perform relaxation iterations over the grid each tick.
+
+## Mesh surface attraction
+
+For surface attraction I began by writing a pseudo obj loader as the one used in previous projects had the vertices triangulated already and I only wanted one particle per vertex. So my obj loader class takes the vertex data and just adds it to one big array of arrays to be used later. Then, in order to make my mesh fuller I parsed the face data such that I would know which vertices formed triangles. I then added a vertex point in the middle of each triangle and appended it to a list of extra vertices. This list of extra attractor points was then added to my final list of vertex positions to be used in the particle class. Since I already had a function in the particle class that would attract a particle to a given target, all I did from there was check if the particles should be attracting to a mesh, and if so, input a corresponding mesh vertex position as a target for the current particle with a small radius so that the particle would eventually converge to jitter around the mesh attractor point.

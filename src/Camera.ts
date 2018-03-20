@@ -61,6 +61,14 @@ class Camera {
     vec3.cross(this.up, this.right, this.forward);
     vec3.normalize(this.up, this.up);
   }
+
+  getInvViewProj(): mat4 {
+    let viewProj = mat4.create();
+    mat4.multiply(viewProj, this.projectionMatrix, this.viewMatrix);
+    let invViewProj = mat4.create();
+    mat4.invert(invViewProj, viewProj);
+    return invViewProj;
+  }
 };
 
 export default Camera;

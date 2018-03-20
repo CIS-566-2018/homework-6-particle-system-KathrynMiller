@@ -13,6 +13,7 @@ import objLoader from './objLoader';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   Meshes: 0.0,
+  attraction: .5,
 };
 
 let square: Square;
@@ -22,15 +23,21 @@ let canvas : HTMLCanvasElement;
 let attract: boolean = false;
 let repel: boolean = false;
 let target: vec3 = vec3.create();
+let strength: number = 50;
+
 let camera: Camera;
 
-let appleVertices: Array<Array<number>>;
+let lotusVertices: Array<Array<number>>;
+let vaseVertices: Array<Array<number>>;
+let roseVertices: Array<Array<number>>;
 let loader: objLoader;
 
 function loadScene() {
 
   loader = new objLoader();
-  appleVertices = new Array<Array<number>>();
+  lotusVertices = new Array<Array<number>>();
+  vaseVertices = new Array<Array<number>>();
+  roseVertices = new Array<Array<number>>();
   square = new Square();
   particles = new Particle();
   particles.setData(vec3.create(), false, false);
@@ -42,12 +49,17 @@ function loadScene() {
   let n = particles.getNumParticles();
   square.setNumInstances(n * n);
 
-  loader.load('./src/objs/apple.obj');
-  appleVertices = loader.getPositions();
+  loader.load('./src/objs/lotus.obj');
+  lotusVertices = loader.getPositions();
+  loader.load('./src/objs/flower.obj');
+  vaseVertices = loader.getPositions();
+  loader.load('./src/objs/rose.obj');
+  roseVertices = loader.getPositions();
 
 }
 // return point at z = 0 from the casted ray direction
-function rayCast(pixel: vec2, origin: vec3): vec3 {
+function rayCast(pixel: vec2, origin: vec3, camera: Camera): vec3 {
+  
   // convert to ndc 
     vec2.scale(pixel, pixel, 2.0);
     vec2.subtract(pixel, pixel, vec2.fromValues(window.innerWidth, window.innerHeight));
@@ -82,6 +94,31 @@ function rayCast(pixel: vec2, origin: vec3): vec3 {
     let y = origin[1] + t * rayDir[1];
 
     return vec3.fromValues(x, y, 0);
+    
+    // ndc coordinates
+   /* 
+    vec2.scale(pixel, pixel, 2.0);
+    vec2.subtract(pixel, pixel, vec2.fromValues(window.innerWidth, window.innerHeight));
+    vec2.scale(pixel, pixel, 1 / window.innerHeight);
+
+
+    let worldPoint = vec3.fromValues(pixel[0], pixel[1], 1.0);
+    vec3.scale(worldPoint, worldPoint, 1000);
+    vec3.transformMat4(worldPoint, worldPoint, camera.getInvViewProj());
+
+    let rayDir = vec3.create();
+    vec3.subtract(rayDir, worldPoint, origin);
+    vec3.normalize(rayDir, rayDir);
+console.log(rayDir);
+// 0 = rayOrigin[2] + t * rayDir[2]
+    let t = -origin[2] / rayDir [2];
+    console.log("t: " + t);
+    let x = origin[0] + t * rayDir[0];
+    let y = origin[1] + t * rayDir[1];
+console.log(x +  "  " + y + " ");
+    return vec3.fromValues(x, y, 0);
+    */
+
 }
 
 function mouseDrag(event: MouseEvent): void {
@@ -93,11 +130,11 @@ function mouseDrag(event: MouseEvent): void {
 
   // tell particles to repel or attract based on mouse button clicked
   if(event.button == 0) {
-    target = rayCast(vec2.fromValues(x, y), camera.position);
+    target = rayCast(vec2.fromValues(x, y), camera.position,camera);
     attract = true;
     repel = false;
   } else if (event.button == 2) {
-    target = rayCast(vec2.fromValues(x, y), camera.position);
+    target = rayCast(vec2.fromValues(x, y), camera.position, camera);
     repel = true;
     attract = false;
   }
@@ -113,16 +150,14 @@ function mouseDown(event: MouseEvent): void {
 
   // tell particles to repel or attract based on mouse button clicked
   if(event.button == 0) {
-    target = rayCast(vec2.fromValues(x, y), camera.position);
+    target = rayCast(vec2.fromValues(x, y), camera.position, camera);
     attract = true;
     repel = false;
   } else if (event.button == 2) {
-    target = rayCast(vec2.fromValues(x, y), camera.position);
+    target = rayCast(vec2.fromValues(x, y), camera.position, camera);
     repel = true;
     attract = false;
   }
-
-  //alert('x=' + x + ' y=' + y);
 }
 
 function mouseUp(event: MouseEvent): void {
@@ -143,7 +178,8 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
-  gui.add(controls, 'Meshes', { 'None': 0.0, 'Apple': 1.0} );
+  let mesh = gui.add(controls, 'Meshes', { 'None': 0.0, 'Lotus': 1.0, 'Flower': 2.0, 'Rose': 3.0} );
+  let attractionStrength = gui.add(controls, 'attraction', 0.0, 1.0);
 
   // get canvas and webgl context
   canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -167,7 +203,7 @@ function main() {
   camera = new Camera(vec3.fromValues(0, 0, 80), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(21.0 / 255.0, 40.0 / 255.0,  147.0 / 255.0, 1);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE); // Additive blending
 
@@ -184,14 +220,29 @@ function main() {
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
 
+    // try to get particles accelerating more to break away from old mesh quicker
+    mesh.onChange(function() {
+      particles.applyRandomForce(time);
+    }) 
+
+    attractionStrength.onChange(function() {
+      
+      strength = 100.0 - controls.attraction.valueOf() * 100.0; 
+      console.log(strength);
+    }) 
+
     if(controls.Meshes.valueOf() == 0.0) {
-      particles.update(time, target, 50, attract, repel, [], false);
+      particles.update(time, target, strength, attract, repel, [], false);
     } else if (controls.Meshes.valueOf() == 1.0) {
       //particles.update(time, target, 1, attract, repel);
-      particles.update(time, target, 50, attract, repel, appleVertices, true);
+      particles.update(time, target, strength, attract, repel, lotusVertices, true);
+    } else if (controls.Meshes.valueOf() == 2.0) {
+      particles.update(time, target, strength, attract, repel, vaseVertices, true);
+    } else if (controls.Meshes.valueOf() == 3.0) {
+      particles.update(time, target, strength, attract, repel, roseVertices, true);
     }
-    particles.setData(target, attract, repel);
-    //particles.setData(vec3.create());
+    particles.setData(target, attract, repel); 
+
     // set square instance data
     let offsets: Float32Array = new Float32Array(particles.getOffsets());
     let colors: Float32Array = new Float32Array(particles.getColors());

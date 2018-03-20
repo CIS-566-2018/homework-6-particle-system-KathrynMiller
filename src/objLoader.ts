@@ -6,7 +6,7 @@ class objLoader {
 
     reader: FileReader = new FileReader();
     vertices: number[][] = new Array<Array<number>>();
-
+    extraVertices: number[][] = new Array<Array<number>>();
     constructor() {
     }
    
@@ -33,6 +33,7 @@ parse(filePath: string): string {
 load(filePath: string) {
   let file : string;
   this.vertices = new Array<Array<number>>();
+  this.extraVertices = new Array<Array<number>>();
 
   file = this.parse(filePath);
   var lines = file.split("\n");
@@ -56,6 +57,7 @@ load(filePath: string) {
          }
       }
   }
+  this.vertices = this.vertices.concat(this.extraVertices);
 }
 
 // add a new vertex within a triangle
@@ -68,7 +70,7 @@ addNewVertex(a: number[], b: number[], c: number[]) {
     let x = (1 - Math.sqrt(r1)) * A[0] + (Math.sqrt(r1) * (1 - r2)) * B[0] + (Math.sqrt(r1) * r2) * C[0];
     let y = (1 - Math.sqrt(r1)) * A[1] + (Math.sqrt(r1) * (1 - r2)) * B[1] + (Math.sqrt(r1) * r2) * C[1];
     let z = this.zInterp(vec3.fromValues(x, y, 0), A, B, C);
-    this.vertices.push([x, y, z]);
+    this.extraVertices.push([x, y, z]);
 }
 
 getPositions(): number[][] {
