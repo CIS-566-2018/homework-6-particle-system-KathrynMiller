@@ -90,16 +90,14 @@ function rayCast(pixel: vec2, camera: Camera): vec3 {
   var point = vec3.create();
   vec3.add(point, h, v);
   vec3.add(point, point, camera.target);
-  return point;
 
+  return point;
 }
 
 function mouseDrag(event: MouseEvent): void {
   var x: number = event.screenX;
   var y: number = event.screenY;
 
-  x -= canvas.offsetLeft;
-  y -= canvas.offsetTop;
   // convert to ndc
   x = (x / canvas.width) * 2 - 1;
   y = (y / canvas.height) * -2 + 1;
@@ -120,8 +118,6 @@ function mouseDown(event: MouseEvent): void {
   var x: number = event.screenX;
   var y: number = event.screenY;
 
-  x -= canvas.offsetLeft;
-  y -= canvas.offsetTop;
   // convert to ndc
   x = (x / canvas.width) * 2 - 1;
   y = (y / canvas.height) * -2 + 1;
@@ -203,9 +199,7 @@ function main() {
     }) 
 
     attractionStrength.onChange(function() {
-      
       strength = 100.0 - controls.attraction.valueOf() * 100.0; 
-      console.log(strength);
     }) 
 
     if(controls.Meshes.valueOf() == 0.0) {
