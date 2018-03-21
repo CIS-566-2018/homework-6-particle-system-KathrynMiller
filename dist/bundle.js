@@ -145,19 +145,6 @@ function equals(a, b) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return gl; });
-/* harmony export (immutable) */ __webpack_exports__["b"] = setGL;
-var gl;
-function setGL(_gl) {
-    gl = _gl;
-}
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__gl_matrix_common__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__gl_matrix_mat2__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__gl_matrix_mat2d__ = __webpack_require__(20);
@@ -173,9 +160,9 @@ function setGL(_gl) {
 /* harmony reexport (module object) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_3__gl_matrix_mat3__; });
 /* harmony reexport (module object) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_4__gl_matrix_mat4__; });
 /* unused harmony reexport quat */
-/* unused harmony reexport vec2 */
-/* harmony reexport (module object) */ __webpack_require__.d(__webpack_exports__, "c", function() { return __WEBPACK_IMPORTED_MODULE_7__gl_matrix_vec3__; });
-/* harmony reexport (module object) */ __webpack_require__.d(__webpack_exports__, "d", function() { return __WEBPACK_IMPORTED_MODULE_8__gl_matrix_vec4__; });
+/* harmony reexport (module object) */ __webpack_require__.d(__webpack_exports__, "c", function() { return __WEBPACK_IMPORTED_MODULE_6__gl_matrix_vec2__; });
+/* harmony reexport (module object) */ __webpack_require__.d(__webpack_exports__, "d", function() { return __WEBPACK_IMPORTED_MODULE_7__gl_matrix_vec3__; });
+/* harmony reexport (module object) */ __webpack_require__.d(__webpack_exports__, "e", function() { return __WEBPACK_IMPORTED_MODULE_8__gl_matrix_vec4__; });
 /**
  * @fileoverview gl-matrix - High performance matrix and vector operations
  * @author Brandon Jones
@@ -214,6 +201,19 @@ THE SOFTWARE. */
 
 
 
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return gl; });
+/* harmony export (immutable) */ __webpack_exports__["b"] = setGL;
+var gl;
+function setGL(_gl) {
+    gl = _gl;
+}
 
 
 /***/ }),
@@ -2623,7 +2623,7 @@ const forEach = (function() {
 
 module.exports = createFilteredVector
 
-var cubicHermite = __webpack_require__(37)
+var cubicHermite = __webpack_require__(38)
 var bsearch = __webpack_require__(9)
 
 function clamp(lo, hi, x) {
@@ -3299,16 +3299,20 @@ function determinant(a) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_stats_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_stats_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_stats_js__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_dat_gui__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_dat_gui___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_dat_gui__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__geometry_Square__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__rendering_gl_OpenGLRenderer__ = __webpack_require__(30);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Camera__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__globals__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__ = __webpack_require__(66);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Particle__ = __webpack_require__(30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__rendering_gl_OpenGLRenderer__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Camera__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__globals__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__ = __webpack_require__(67);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__objLoader__ = __webpack_require__(68);
+
+
 
 
 
@@ -3320,33 +3324,112 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-    tesselations: 5,
-    'Load Scene': loadScene,
+    Meshes: 0.0,
+    attraction: .5,
 };
 let square;
+let particles;
 let time = 0.0;
+let canvas;
+let attract = false;
+let repel = false;
+let target = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+let strength = 50;
+let camera;
+let lotusVertices;
+let vaseVertices;
+let roseVertices;
+let beeVertices;
+let storkVertices;
+let canVertices;
+let loader;
 function loadScene() {
+    loader = new __WEBPACK_IMPORTED_MODULE_9__objLoader__["a" /* default */]();
+    lotusVertices = new Array();
+    vaseVertices = new Array();
+    roseVertices = new Array();
+    beeVertices = new Array();
+    storkVertices = new Array();
+    canVertices = new Array();
     square = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
+    particles = new __WEBPACK_IMPORTED_MODULE_4__Particle__["a" /* default */]();
+    particles.setData(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create(), false, false);
     square.create();
-    // Set up particles here. Hard-coded example data for now
-    let offsetsArray = [];
-    let colorsArray = [];
-    let n = 100.0;
-    for (let i = 0; i < n; i++) {
-        for (let j = 0; j < n; j++) {
-            offsetsArray.push(i);
-            offsetsArray.push(j);
-            offsetsArray.push(0);
-            colorsArray.push(i / n);
-            colorsArray.push(j / n);
-            colorsArray.push(1.0);
-            colorsArray.push(1.0); // Alpha channel
-        }
-    }
-    let offsets = new Float32Array(offsetsArray);
-    let colors = new Float32Array(colorsArray);
+    let offsets = new Float32Array(particles.getOffsets());
+    let colors = new Float32Array(particles.getColors());
     square.setInstanceVBOs(offsets, colors);
-    square.setNumInstances(n * n); // 10x10 grid of "particles"
+    let n = particles.getNumParticles();
+    square.setNumInstances(n * n);
+    loader.load('./src/objs/lotus.obj');
+    lotusVertices = loader.getPositions();
+    loader.load('./src/objs/flower.obj');
+    vaseVertices = loader.getPositions();
+    loader.load('./src/objs/rose.obj');
+    roseVertices = loader.getPositions();
+    loader.load('./src/objs/bee.obj');
+    beeVertices = loader.getPositions();
+    loader.load('./src/objs/stork.obj');
+    storkVertices = loader.getPositions();
+    loader.load('./src/objs/wateringCan.obj');
+    canVertices = loader.getPositions();
+}
+// return point at z = 0 from the casted ray direction
+function rayCast(pixel, camera) {
+    var targetDist = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+    let v = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+    let h = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(targetDist, camera.target, camera.position);
+    var len = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(targetDist);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(v, camera.up, Math.tan(camera.fovy / 2.0) * len);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(h, camera.right, Math.tan(camera.fovy / 2.0) * len * camera.aspectRatio);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(v, v, pixel[1]);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(h, h, pixel[0]);
+    var point = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(point, h, v);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(point, point, camera.target);
+    return point;
+}
+function mouseDrag(event) {
+    var x = event.screenX;
+    var y = event.screenY;
+    // convert to ndc
+    x = (x / canvas.width) * 2 - 1;
+    y = (y / canvas.height) * -2 + 1;
+    // tell particles to repel or attract based on mouse button clicked
+    if (event.button == 0) {
+        target = rayCast(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(x, y), camera);
+        attract = true;
+        repel = false;
+    }
+    else if (event.button == 2) {
+        target = rayCast(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(x, y), camera);
+        repel = true;
+        attract = false;
+    }
+    console.log("drag");
+}
+function mouseDown(event) {
+    var x = event.screenX;
+    var y = event.screenY;
+    // convert to ndc
+    x = (x / canvas.width) * 2 - 1;
+    y = (y / canvas.height) * -2 + 1;
+    // tell particles to repel or attract based on mouse button clicked
+    if (event.button == 0) {
+        target = rayCast(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(x, y), camera);
+        attract = true;
+        repel = false;
+    }
+    else if (event.button == 2) {
+        target = rayCast(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec2 */].fromValues(x, y), camera);
+        repel = true;
+        attract = false;
+    }
+}
+function mouseUp(event) {
+    attract = false;
+    repel = false;
+    target = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
 }
 function main() {
     // Initial display for framerate
@@ -3358,25 +3441,31 @@ function main() {
     document.body.appendChild(stats.domElement);
     // Add controls to the gui
     const gui = new __WEBPACK_IMPORTED_MODULE_2_dat_gui__["GUI"]();
+    let mesh = gui.add(controls, 'Meshes', { 'None': 0.0, 'Lotus': 1.0, 'Flower': 2.0, 'Rose': 3.0, 'Bee': 4.0, 'Stork': 5.0, "WateringCan": 6.0 });
+    let attractionStrength = gui.add(controls, 'attraction', 0.0, 1.0);
     // get canvas and webgl context
-    const canvas = document.getElementById('canvas');
+    canvas = document.getElementById('canvas');
     const gl = canvas.getContext('webgl2');
+    canvas.addEventListener("dragstart", mouseDrag, false);
+    canvas.addEventListener("mousedown", mouseDown, false);
+    canvas.addEventListener("mouseup", mouseUp, false);
+    canvas.addEventListener("dragend", mouseUp, false);
     if (!gl) {
         alert('WebGL 2 not supported!');
     }
     // `setGL` is a function imported above which sets the value of `gl` in the `globals.ts` module.
     // Later, we can import `gl` from `globals.ts` to access it
-    Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* setGL */])(gl);
+    Object(__WEBPACK_IMPORTED_MODULE_7__globals__["b" /* setGL */])(gl);
     // Initial call to load scene
     loadScene();
-    const camera = new __WEBPACK_IMPORTED_MODULE_5__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(50, 50, 10), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["c" /* vec3 */].fromValues(50, 50, 0));
-    const renderer = new __WEBPACK_IMPORTED_MODULE_4__rendering_gl_OpenGLRenderer__["a" /* default */](canvas);
-    renderer.setClearColor(0.2, 0.2, 0.2, 1);
+    camera = new __WEBPACK_IMPORTED_MODULE_6__Camera__["a" /* default */](__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(0, 0, 80), __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(0, 0, 0));
+    const renderer = new __WEBPACK_IMPORTED_MODULE_5__rendering_gl_OpenGLRenderer__["a" /* default */](canvas);
+    renderer.setClearColor(21.0 / 255.0, 40.0 / 255.0, 147.0 / 255.0, 1);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE); // Additive blending
-    const lambert = new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["b" /* default */]([
-        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(67)),
-        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(68)),
+    const lambert = new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(69)),
+        new __WEBPACK_IMPORTED_MODULE_8__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(70)),
     ]);
     // This function will be called every frame
     function tick() {
@@ -3385,6 +3474,42 @@ function main() {
         lambert.setTime(time++);
         gl.viewport(0, 0, window.innerWidth, window.innerHeight);
         renderer.clear();
+        // try to get particles accelerating more to break away from old mesh quicker
+        mesh.onChange(function () {
+            particles.applyRandomForce(time);
+        });
+        attractionStrength.onChange(function () {
+            strength = 100.0 - controls.attraction.valueOf() * 100.0;
+        });
+        if (controls.Meshes.valueOf() == 0.0) {
+            particles.update(time, target, strength, attract, repel, [], false);
+        }
+        else if (controls.Meshes.valueOf() == 1.0) {
+            //particles.update(time, target, 1, attract, repel);
+            particles.update(time, target, strength, attract, repel, lotusVertices, true);
+        }
+        else if (controls.Meshes.valueOf() == 2.0) {
+            particles.update(time, target, strength, attract, repel, vaseVertices, true);
+        }
+        else if (controls.Meshes.valueOf() == 3.0) {
+            particles.update(time, target, strength, attract, repel, roseVertices, true);
+        }
+        else if (controls.Meshes.valueOf() == 4.0) {
+            particles.update(time, target, strength, attract, repel, beeVertices, true);
+        }
+        else if (controls.Meshes.valueOf() == 5.0) {
+            particles.update(time, target, strength, attract, repel, storkVertices, true);
+        }
+        else if (controls.Meshes.valueOf() == 6.0) {
+            particles.update(time, target, strength, attract, repel, canVertices, true);
+        }
+        particles.setData(target, attract, repel);
+        // set square instance data
+        let offsets = new Float32Array(particles.getOffsets());
+        let colors = new Float32Array(particles.getColors());
+        square.setInstanceVBOs(offsets, colors);
+        let n = particles.getNumParticles();
+        square.setNumInstances(n * n);
         renderer.render(camera, lambert, [
             square,
         ]);
@@ -6809,40 +6934,41 @@ const setAxes = (function() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export create */
-/* unused harmony export clone */
-/* unused harmony export fromValues */
-/* unused harmony export copy */
-/* unused harmony export set */
-/* unused harmony export add */
-/* unused harmony export subtract */
-/* unused harmony export multiply */
-/* unused harmony export divide */
-/* unused harmony export ceil */
-/* unused harmony export floor */
-/* unused harmony export min */
-/* unused harmony export max */
-/* unused harmony export round */
-/* unused harmony export scale */
-/* unused harmony export scaleAndAdd */
-/* unused harmony export distance */
-/* unused harmony export squaredDistance */
-/* unused harmony export length */
-/* unused harmony export squaredLength */
-/* unused harmony export negate */
-/* unused harmony export inverse */
-/* unused harmony export normalize */
-/* unused harmony export dot */
-/* unused harmony export cross */
-/* unused harmony export lerp */
-/* unused harmony export random */
-/* unused harmony export transformMat2 */
-/* unused harmony export transformMat2d */
-/* unused harmony export transformMat3 */
-/* unused harmony export transformMat4 */
-/* unused harmony export str */
-/* unused harmony export exactEquals */
-/* unused harmony export equals */
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony export (immutable) */ __webpack_exports__["create"] = create;
+/* harmony export (immutable) */ __webpack_exports__["clone"] = clone;
+/* harmony export (immutable) */ __webpack_exports__["fromValues"] = fromValues;
+/* harmony export (immutable) */ __webpack_exports__["copy"] = copy;
+/* harmony export (immutable) */ __webpack_exports__["set"] = set;
+/* harmony export (immutable) */ __webpack_exports__["add"] = add;
+/* harmony export (immutable) */ __webpack_exports__["subtract"] = subtract;
+/* harmony export (immutable) */ __webpack_exports__["multiply"] = multiply;
+/* harmony export (immutable) */ __webpack_exports__["divide"] = divide;
+/* harmony export (immutable) */ __webpack_exports__["ceil"] = ceil;
+/* harmony export (immutable) */ __webpack_exports__["floor"] = floor;
+/* harmony export (immutable) */ __webpack_exports__["min"] = min;
+/* harmony export (immutable) */ __webpack_exports__["max"] = max;
+/* harmony export (immutable) */ __webpack_exports__["round"] = round;
+/* harmony export (immutable) */ __webpack_exports__["scale"] = scale;
+/* harmony export (immutable) */ __webpack_exports__["scaleAndAdd"] = scaleAndAdd;
+/* harmony export (immutable) */ __webpack_exports__["distance"] = distance;
+/* harmony export (immutable) */ __webpack_exports__["squaredDistance"] = squaredDistance;
+/* harmony export (immutable) */ __webpack_exports__["length"] = length;
+/* harmony export (immutable) */ __webpack_exports__["squaredLength"] = squaredLength;
+/* harmony export (immutable) */ __webpack_exports__["negate"] = negate;
+/* harmony export (immutable) */ __webpack_exports__["inverse"] = inverse;
+/* harmony export (immutable) */ __webpack_exports__["normalize"] = normalize;
+/* harmony export (immutable) */ __webpack_exports__["dot"] = dot;
+/* harmony export (immutable) */ __webpack_exports__["cross"] = cross;
+/* harmony export (immutable) */ __webpack_exports__["lerp"] = lerp;
+/* harmony export (immutable) */ __webpack_exports__["random"] = random;
+/* harmony export (immutable) */ __webpack_exports__["transformMat2"] = transformMat2;
+/* harmony export (immutable) */ __webpack_exports__["transformMat2d"] = transformMat2d;
+/* harmony export (immutable) */ __webpack_exports__["transformMat3"] = transformMat3;
+/* harmony export (immutable) */ __webpack_exports__["transformMat4"] = transformMat4;
+/* harmony export (immutable) */ __webpack_exports__["str"] = str;
+/* harmony export (immutable) */ __webpack_exports__["exactEquals"] = exactEquals;
+/* harmony export (immutable) */ __webpack_exports__["equals"] = equals;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common__ = __webpack_require__(0);
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
@@ -7351,7 +7477,7 @@ function equals(a, b) {
  * @function
  */
 const len = length;
-/* unused harmony export len */
+/* harmony export (immutable) */ __webpack_exports__["len"] = len;
 
 
 /**
@@ -7359,7 +7485,7 @@ const len = length;
  * @function
  */
 const sub = subtract;
-/* unused harmony export sub */
+/* harmony export (immutable) */ __webpack_exports__["sub"] = sub;
 
 
 /**
@@ -7367,7 +7493,7 @@ const sub = subtract;
  * @function
  */
 const mul = multiply;
-/* unused harmony export mul */
+/* harmony export (immutable) */ __webpack_exports__["mul"] = mul;
 
 
 /**
@@ -7375,7 +7501,7 @@ const mul = multiply;
  * @function
  */
 const div = divide;
-/* unused harmony export div */
+/* harmony export (immutable) */ __webpack_exports__["div"] = div;
 
 
 /**
@@ -7383,7 +7509,7 @@ const div = divide;
  * @function
  */
 const dist = distance;
-/* unused harmony export dist */
+/* harmony export (immutable) */ __webpack_exports__["dist"] = dist;
 
 
 /**
@@ -7391,7 +7517,7 @@ const dist = distance;
  * @function
  */
 const sqrDist = squaredDistance;
-/* unused harmony export sqrDist */
+/* harmony export (immutable) */ __webpack_exports__["sqrDist"] = sqrDist;
 
 
 /**
@@ -7399,7 +7525,7 @@ const sqrDist = squaredDistance;
  * @function
  */
 const sqrLen = squaredLength;
-/* unused harmony export sqrLen */
+/* harmony export (immutable) */ __webpack_exports__["sqrLen"] = sqrLen;
 
 
 /**
@@ -7442,7 +7568,7 @@ const forEach = (function() {
     return a;
   };
 })();
-/* unused harmony export forEach */
+/* harmony export (immutable) */ __webpack_exports__["forEach"] = forEach;
 
 
 
@@ -11896,7 +12022,7 @@ dat.utils.common);
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(2);
 
 
 class Square extends __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__["a" /* default */] {
@@ -11939,7 +12065,7 @@ class Square extends __WEBPACK_IMPORTED_MODULE_0__rendering_gl_Drawable__["a" /*
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__globals__ = __webpack_require__(2);
 
 class Drawable {
     constructor() {
@@ -12015,8 +12141,252 @@ class Drawable {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+
+class Particle {
+    constructor() {
+        this.Pi = 3.1415;
+        // used for separating particles into bins of colors
+        // if there is a target (attract or repel), base color on dist from target
+        // otherwise based on distance from center
+        this.maxCol = -1000000000000;
+        this.minCol = 1000000000000;
+        this.color1 = [232.0 / 255.0, 131.0 / 255.0, 214.0 / 255.0, 1.0];
+        this.color2 = [255.0 / 255.0, 183.0 / 255.0, 150.0 / 255.0, 1.0];
+        this.color3 = [137.0 / 255.0, 255.0 / 255.0, 133.0 / 255.0, 1.0];
+        this.color4 = [131.0 / 255.0, 227.0 / 255.0, 232.0 / 255.0, 1.0];
+        this.color5 = [138.0 / 255.0, 131.0 / 255.0, 255.0 / 255.0, 1.0];
+        this.palette = [this.color1, this.color2, this.color3, this.color4, this.color5];
+        // square root of number of particles to start
+        this.numParticles = 100;
+        this.boundingVal = 99;
+        this.prevTime = 0;
+        this.position = new Array();
+        this.prevPos = new Array();
+        this.offsetsArray = [];
+        this.colorsArray = [];
+        let speedScale = 4;
+        // have all points initially lie in a plane
+        let n = this.numParticles;
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                // generate random starting velocity for points
+                let x = Math.random() * this.boundingVal - (this.boundingVal / 2);
+                let y = Math.random() * this.boundingVal - (this.boundingVal / 2);
+                let z = Math.random() * this.boundingVal - (this.boundingVal / 2);
+                let x2 = Math.random() * this.boundingVal - (this.boundingVal / 2);
+                let y2 = Math.random() * this.boundingVal - (this.boundingVal / 2);
+                let z2 = Math.random() * this.boundingVal - (this.boundingVal / 2);
+                this.position.push([x, y, z]);
+                this.prevPos.push([x2, y2, z2]);
+                let r1 = Math.random() * 2 * this.Pi - 1;
+                let r2 = Math.random() * 2 * this.Pi - 1;
+                let r3 = Math.random() * 2 * this.Pi - 1;
+                this.offsetsArray.push(x);
+                this.offsetsArray.push(y);
+                this.offsetsArray.push(z);
+                this.colorsArray.push(i / n);
+                this.colorsArray.push(j / n);
+                this.colorsArray.push(1.0);
+                this.colorsArray.push(1.0); // Alpha channel
+            }
+        }
+    }
+    // set data of colors and offsets
+    // used to set data of square instances in main.ts
+    setData(target, attract, repel) {
+        let n = this.numParticles;
+        this.offsetsArray = [];
+        this.colorsArray = [];
+        let colorRange = this.boundingVal / 20.0;
+        let targetDist = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        let color = [];
+        // make target center is there is no user inpute
+        if (!attract && !repel) {
+            target = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        }
+        for (let i = 0; i < n * n; i++) {
+            this.offsetsArray.push(this.position[i][0]);
+            this.offsetsArray.push(this.position[i][1]);
+            this.offsetsArray.push(this.position[i][2]);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(targetDist, this.position[i], target);
+            let colorIdx = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(targetDist) / 20;
+            if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(targetDist) > 94) {
+                colorIdx = 4;
+            }
+            color = this.palette[Math.floor(colorIdx)];
+            this.colorsArray.push(color[0]);
+            this.colorsArray.push(color[1]);
+            this.colorsArray.push(color[2]);
+            this.colorsArray.push(1.0);
+        }
+    }
+    applyRandomForce(time) {
+        // verlet integration over each offset
+        for (let i = 0; i < this.numParticles * this.numParticles; i++) {
+            let newPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+            let changePos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+            let accelTerm = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+            let acceleration = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+            // p + (p - p*)
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(newPos, newPos, this.position[i]);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(changePos, this.position[i], this.prevPos[i]);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(newPos, newPos, changePos);
+            let currPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+            // set previous position to be current position
+            this.prevPos[i] = [this.position[i][0], this.position[i][1], this.position[i][2]];
+            // if particle is at edge of bounding box, reverse direction
+            if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(newPos) > this.boundingVal) {
+                let dir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+                let offset = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(offset, offset, .2); // offset for non-linear force direction
+                // vector in direction of motion
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(dir, newPos, this.position[i]);
+                newPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].normalize(dir, dir);
+                // negate to send in opposite direction
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(dir, dir, -1);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(dir, dir, 1 / 10);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(dir, offset, dir);
+                acceleration = this.applyParticleForce(dir);
+            }
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(acceleration, acceleration, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(Math.random(), Math.random(), Math.random()));
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(acceleration, acceleration, 3);
+            // at^2 term
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(newPos, newPos, accelTerm);
+            // set current position to be newly calculated position
+            this.position[i] = [newPos[0], newPos[1], newPos[2]];
+        }
+        this.prevTime = time;
+    }
+    // updates position data based on time and particle attributes
+    update(time, target, strength, attract, repel, vertices, mesh) {
+        // verlet integration over each offset
+        for (let i = 0; i < this.numParticles * this.numParticles; i++) {
+            let newPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+            let changePos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+            let accelTerm = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+            let acceleration = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+            // p + (p - p*)
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(newPos, newPos, this.position[i]);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(changePos, this.position[i], this.prevPos[i]);
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(newPos, newPos, changePos);
+            let currPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+            // set previous position to be current position
+            this.prevPos[i] = [this.position[i][0], this.position[i][1], this.position[i][2]];
+            // if there is a desired target (mouseclick etc.)
+            if (attract) {
+                let attraction = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(attraction, this.attractTarget(target, strength, newPos, currPos), 1 / 20);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(acceleration, acceleration, attraction);
+            }
+            else if (repel) {
+                let repelForce = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(repelForce, this.repelTarget(target, strength, newPos, currPos), 1 / 20);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(acceleration, acceleration, repelForce);
+            }
+            // see if particle should form to mesh
+            if (mesh) {
+                if (i < vertices.length) {
+                    let meshForce = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+                    let vertex = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(vertices[i][0], vertices[i][1], vertices[i][2]);
+                    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(meshForce, this.attractTarget(vertex, 2, newPos, currPos), 1 / 10);
+                    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(acceleration, acceleration, meshForce);
+                }
+            }
+            // if particle is at edge of bounding box, reverse direction
+            if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(newPos) > this.boundingVal) {
+                let dir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+                let offset = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(offset, offset, .2); // offset for non-linear force direction
+                // vector in direction of motion
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(dir, newPos, this.position[i]);
+                newPos = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(this.position[i][0], this.position[i][1], this.position[i][2]);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].normalize(dir, dir);
+                // negate to send in opposite direction
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(dir, dir, -1);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(dir, dir, 1 / 10);
+                __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(dir, offset, dir);
+                acceleration = this.applyParticleForce(dir);
+                //vec3.add(acceleration, acceleration, this.applyParticleForce(dir));
+            }
+            // at^2 term
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(accelTerm, acceleration, Math.pow(time - this.prevTime, 2));
+            __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(newPos, newPos, accelTerm);
+            // set current position to be newly calculated position
+            this.position[i] = [newPos[0], newPos[1], newPos[2]];
+        }
+        this.prevTime = time;
+    }
+    // particles are attracted to source, p, based on strength input
+    // returns acceleration towards target
+    attractTarget(target, strength, newPos, currPos) {
+        //TODO make based on strength
+        // maximum distance particles can stray
+        let maxRad = strength;
+        let targetVec = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create(); // vector from particle to target
+        let currDir = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        let dif = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(currDir, newPos, currPos);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(targetVec, target, newPos);
+        // if already heading towards the center, don't apply acceleration again
+        if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].dot(currDir, targetVec) > 0) {
+            return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        }
+        else {
+            if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(targetVec) > maxRad) {
+                return this.applyParticleForce(targetVec);
+            }
+            else {
+                let radius = Math.abs(Math.random() - Math.random()) * maxRad; // radius between 0 and maxRad
+                // switch direction if straying outside of this "spring" from target
+                if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(targetVec) > radius) {
+                    return this.applyParticleForce(targetVec);
+                }
+            }
+        }
+        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+    }
+    repelTarget(target, strength, newPos, currPos) {
+        // maximum distance particles can stray
+        let minRad = strength;
+        let targetVec = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create(); // vector from particle to target
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(targetVec, newPos, target);
+        // if inside circle
+        if (__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(targetVec) < minRad) {
+            return this.applyParticleForce(targetVec);
+        }
+        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+    }
+    // apply a force to a single particle at index i
+    // returns the acceleration of the particle
+    applyParticleForce(f) {
+        let mass = 2;
+        let a = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].scale(a, f, 1 / mass);
+        return __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(a[0], a[1], a[2]);
+    }
+    getColors() {
+        return this.colorsArray;
+    }
+    getOffsets() {
+        return this.offsetsArray;
+    }
+    getNumParticles() {
+        return this.numParticles;
+    }
+}
+/* harmony default export */ __webpack_exports__["a"] = (Particle);
+
+
+/***/ }),
+/* 31 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(2);
 
 
 // In this file, `gl` is accessible because it is imported above
@@ -12037,7 +12407,7 @@ class OpenGLRenderer {
     render(camera, prog, drawables) {
         let model = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* mat4 */].create();
         let viewProj = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* mat4 */].create();
-        let color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec4 */].fromValues(1, 0, 0, 1);
+        let color = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(1, 0, 0, 1);
         // Each column of the axes matrix is an axis. Right, Up, Forward.
         let axes = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["a" /* mat3 */].fromValues(camera.right[0], camera.right[1], camera.right[2], camera.up[0], camera.up[1], camera.up[2], camera.forward[0], camera.forward[1], camera.forward[2]);
         __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* mat4 */].identity(model);
@@ -12055,13 +12425,13 @@ class OpenGLRenderer {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_3d_view_controls__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_3d_view_controls__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_3d_view_controls___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_3d_view_controls__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_gl_matrix__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_gl_matrix__ = __webpack_require__(1);
 
 
 class Camera {
@@ -12072,25 +12442,25 @@ class Camera {
         this.aspectRatio = 1;
         this.near = 0.1;
         this.far = 1000;
-        this.position = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].create();
-        this.direction = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].create();
-        this.target = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].create();
-        this.up = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].create();
-        this.right = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].create();
-        this.forward = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].create();
+        this.position = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].create();
+        this.direction = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].create();
+        this.target = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].create();
+        this.up = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].create();
+        this.right = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].create();
+        this.forward = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].create();
         const canvas = document.getElementById('canvas');
         this.controls = __WEBPACK_IMPORTED_MODULE_0_3d_view_controls__(canvas, {
             position: position,
             center: target,
         });
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].add(this.target, this.position, this.direction);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].add(this.target, this.position, this.direction);
         __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["b" /* mat4 */].lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
         this.position = this.controls.eye;
         this.up = this.controls.up;
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].subtract(this.forward, this.target, this.position);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].normalize(this.forward, this.forward);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].cross(this.right, this.forward, this.up);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].normalize(this.right, this.right);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].subtract(this.forward, this.target, this.position);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].normalize(this.forward, this.forward);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].cross(this.right, this.forward, this.up);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].normalize(this.right, this.right);
     }
     setAspectRatio(aspectRatio) {
         this.aspectRatio = aspectRatio;
@@ -12100,19 +12470,26 @@ class Camera {
     }
     update() {
         this.controls.tick();
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].add(this.target, this.position, this.direction);
-        this.position = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].fromValues(this.controls.eye[0], this.controls.eye[1], this.controls.eye[2]);
-        this.target = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].fromValues(this.controls.center[0], this.controls.center[1], this.controls.center[2]);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].add(this.target, this.position, this.direction);
+        this.position = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].fromValues(this.controls.eye[0], this.controls.eye[1], this.controls.eye[2]);
+        this.target = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].fromValues(this.controls.center[0], this.controls.center[1], this.controls.center[2]);
         __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["b" /* mat4 */].lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
         this.position = this.controls.eye;
-        this.up = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].fromValues(this.controls.up[0], this.controls.up[1], this.controls.up[2]);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].normalize(this.up, this.up);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].subtract(this.forward, this.target, this.position);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].normalize(this.forward, this.forward);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].cross(this.right, this.forward, this.up);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].normalize(this.right, this.right);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].cross(this.up, this.right, this.forward);
-        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["c" /* vec3 */].normalize(this.up, this.up);
+        this.up = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].fromValues(this.controls.up[0], this.controls.up[1], this.controls.up[2]);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].normalize(this.up, this.up);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].subtract(this.forward, this.target, this.position);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].normalize(this.forward, this.forward);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].cross(this.right, this.forward, this.up);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].normalize(this.right, this.right);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].cross(this.up, this.right, this.forward);
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["d" /* vec3 */].normalize(this.up, this.up);
+    }
+    getInvViewProj() {
+        let viewProj = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["b" /* mat4 */].create();
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["b" /* mat4 */].multiply(viewProj, this.projectionMatrix, this.viewMatrix);
+        let invViewProj = __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["b" /* mat4 */].create();
+        __WEBPACK_IMPORTED_MODULE_1_gl_matrix__["b" /* mat4 */].invert(invViewProj, viewProj);
+        return invViewProj;
     }
 }
 ;
@@ -12120,7 +12497,7 @@ class Camera {
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12128,12 +12505,12 @@ class Camera {
 
 module.exports = createCamera
 
-var now         = __webpack_require__(33)
-var createView  = __webpack_require__(35)
-var mouseChange = __webpack_require__(58)
-var mouseWheel  = __webpack_require__(60)
-var mouseOffset = __webpack_require__(63)
-var hasPassive  = __webpack_require__(64)
+var now         = __webpack_require__(34)
+var createView  = __webpack_require__(36)
+var mouseChange = __webpack_require__(59)
+var mouseWheel  = __webpack_require__(61)
+var mouseOffset = __webpack_require__(64)
+var hasPassive  = __webpack_require__(65)
 
 function createCamera(element, options) {
   element = element || document.body
@@ -12363,7 +12740,7 @@ function createCamera(element, options) {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {module.exports =
@@ -12374,10 +12751,10 @@ function createCamera(element, options) {
     return +new Date
   }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(34)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35)))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports) {
 
 var g;
@@ -12404,7 +12781,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12412,9 +12789,9 @@ module.exports = g;
 
 module.exports = createViewController
 
-var createTurntable = __webpack_require__(36)
-var createOrbit     = __webpack_require__(39)
-var createMatrix    = __webpack_require__(42)
+var createTurntable = __webpack_require__(37)
+var createOrbit     = __webpack_require__(40)
+var createMatrix    = __webpack_require__(43)
 
 function ViewController(controllers, mode) {
   this._controllerNames = Object.keys(controllers)
@@ -12532,7 +12909,7 @@ function createViewController(options) {
 }
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12542,7 +12919,7 @@ module.exports = createTurntableController
 
 var filterVector = __webpack_require__(8)
 var invert44     = __webpack_require__(3)
-var rotateM      = __webpack_require__(38)
+var rotateM      = __webpack_require__(39)
 var cross        = __webpack_require__(10)
 var normalize3   = __webpack_require__(4)
 var dot3         = __webpack_require__(11)
@@ -13110,7 +13487,7 @@ function createTurntableController(options) {
 }
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13155,7 +13532,7 @@ module.exports = cubicHermite
 module.exports.derivative = dcubicHermite
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports) {
 
 module.exports = rotate;
@@ -13224,7 +13601,7 @@ function rotate(out, a, rad, axis) {
 };
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13234,9 +13611,9 @@ module.exports = createOrbitController
 
 var filterVector  = __webpack_require__(8)
 var lookAt        = __webpack_require__(12)
-var mat4FromQuat  = __webpack_require__(40)
+var mat4FromQuat  = __webpack_require__(41)
 var invert44      = __webpack_require__(3)
-var quatFromFrame = __webpack_require__(41)
+var quatFromFrame = __webpack_require__(42)
 
 function len3(x,y,z) {
   return Math.sqrt(Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2))
@@ -13623,7 +14000,7 @@ function createOrbitController(options) {
 }
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 module.exports = fromQuat;
@@ -13675,7 +14052,7 @@ function fromQuat(out, q) {
 };
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13722,18 +14099,18 @@ function quatFromFrame(
 }
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var bsearch   = __webpack_require__(9)
-var m4interp  = __webpack_require__(43)
+var m4interp  = __webpack_require__(44)
 var invert44  = __webpack_require__(3)
-var rotateX   = __webpack_require__(55)
-var rotateY   = __webpack_require__(56)
-var rotateZ   = __webpack_require__(57)
+var rotateX   = __webpack_require__(56)
+var rotateY   = __webpack_require__(57)
+var rotateZ   = __webpack_require__(58)
 var lookAt    = __webpack_require__(12)
 var translate = __webpack_require__(14)
 var scale     = __webpack_require__(16)
@@ -13927,15 +14304,15 @@ function createMatrixCameraController(options) {
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var lerp = __webpack_require__(44)
+var lerp = __webpack_require__(45)
 
-var recompose = __webpack_require__(45)
-var decompose = __webpack_require__(48)
+var recompose = __webpack_require__(46)
+var decompose = __webpack_require__(49)
 var determinant = __webpack_require__(17)
-var slerp = __webpack_require__(53)
+var slerp = __webpack_require__(54)
 
 var state0 = state()
 var state1 = state()
@@ -13984,7 +14361,7 @@ function vec4() {
 }
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports) {
 
 module.exports = lerp;
@@ -14009,7 +14386,7 @@ function lerp(out, a, b, t) {
 }
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -14026,10 +14403,10 @@ From: http://www.w3.org/TR/css3-transforms/#recomposing-to-a-3d-matrix
 var mat4 = {
     identity: __webpack_require__(13),
     translate: __webpack_require__(14),
-    multiply: __webpack_require__(46),
+    multiply: __webpack_require__(47),
     create: __webpack_require__(15),
     scale: __webpack_require__(16),
-    fromRotationTranslation: __webpack_require__(47)
+    fromRotationTranslation: __webpack_require__(48)
 }
 
 var rotationMatrix = mat4.create()
@@ -14074,7 +14451,7 @@ module.exports = function recomposeMat4(matrix, translation, scale, skew, perspe
 }
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports) {
 
 module.exports = multiply;
@@ -14121,7 +14498,7 @@ function multiply(out, a, b) {
 };
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports) {
 
 module.exports = fromRotationTranslation;
@@ -14179,7 +14556,7 @@ function fromRotationTranslation(out, q, v) {
 };
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*jshint unused:true*/
@@ -14199,15 +14576,15 @@ https://github.com/ChromiumWebApps/chromium/blob/master/ui/gfx/transform_util.cc
 http://www.w3.org/TR/css3-transforms/#decomposing-a-3d-matrix
 */
 
-var normalize = __webpack_require__(49)
+var normalize = __webpack_require__(50)
 
 var create = __webpack_require__(15)
-var clone = __webpack_require__(50)
+var clone = __webpack_require__(51)
 var determinant = __webpack_require__(17)
 var invert = __webpack_require__(3)
-var transpose = __webpack_require__(51)
+var transpose = __webpack_require__(52)
 var vec3 = {
-    length: __webpack_require__(52),
+    length: __webpack_require__(53),
     normalize: __webpack_require__(4),
     dot: __webpack_require__(11),
     cross: __webpack_require__(10)
@@ -14363,7 +14740,7 @@ function combine(out, a, b, scale1, scale2) {
 }
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports) {
 
 module.exports = function normalize(out, mat) {
@@ -14378,7 +14755,7 @@ module.exports = function normalize(out, mat) {
 }
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports) {
 
 module.exports = clone;
@@ -14411,7 +14788,7 @@ function clone(a) {
 };
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports) {
 
 module.exports = transpose;
@@ -14465,7 +14842,7 @@ function transpose(out, a) {
 };
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports) {
 
 module.exports = length;
@@ -14484,13 +14861,13 @@ function length(a) {
 }
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(54)
+module.exports = __webpack_require__(55)
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports) {
 
 module.exports = slerp
@@ -14547,7 +14924,7 @@ function slerp (out, a, b, t) {
 
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports) {
 
 module.exports = rotateX;
@@ -14596,7 +14973,7 @@ function rotateX(out, a, rad) {
 };
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports) {
 
 module.exports = rotateY;
@@ -14645,7 +15022,7 @@ function rotateY(out, a, rad) {
 };
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports) {
 
 module.exports = rotateZ;
@@ -14694,7 +15071,7 @@ function rotateZ(out, a, rad) {
 };
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14702,7 +15079,7 @@ function rotateZ(out, a, rad) {
 
 module.exports = mouseListen
 
-var mouse = __webpack_require__(59)
+var mouse = __webpack_require__(60)
 
 function mouseListen (element, callback) {
   if (!callback) {
@@ -14906,7 +15283,7 @@ function mouseListen (element, callback) {
 
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14973,13 +15350,13 @@ exports.y = mouseRelativeY
 
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var toPX = __webpack_require__(61)
+var toPX = __webpack_require__(62)
 
 module.exports = mouseWheelListen
 
@@ -15020,13 +15397,13 @@ function mouseWheelListen(element, callback, noScroll) {
 
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var parseUnit = __webpack_require__(62)
+var parseUnit = __webpack_require__(63)
 
 module.exports = toPX
 
@@ -15086,7 +15463,7 @@ function toPX(str, element) {
 }
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports) {
 
 module.exports = function parseUnit(str, out) {
@@ -15101,7 +15478,7 @@ module.exports = function parseUnit(str, out) {
 }
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports) {
 
 var rootPosition = { left: 0, top: 0 }
@@ -15132,13 +15509,13 @@ function getBoundingClientOffset (element) {
 
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var isBrowser = __webpack_require__(65)
+var isBrowser = __webpack_require__(66)
 
 function detect() {
 	var supported = false
@@ -15163,18 +15540,18 @@ module.exports = isBrowser && detect()
 
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ (function(module, exports) {
 
 module.exports = true;
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__globals__ = __webpack_require__(2);
 
 
 var activeProgram = null;
@@ -15255,12 +15632,12 @@ class ShaderProgram {
         }
         if (this.attrCol != -1 && d.bindCol()) {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].enableVertexAttribArray(this.attrCol);
-            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribPointer(this.attrCol, 4, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FLOAT, false, 0, 0); // May need to adjust stride
+            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribPointer(this.attrCol, 4, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FLOAT, false, 0, 0);
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribDivisor(this.attrCol, 1); // Advance 1 index in col VBO for each drawn instance
         }
         if (this.attrTranslate != -1 && d.bindTranslate()) {
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].enableVertexAttribArray(this.attrTranslate);
-            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribPointer(this.attrTranslate, 3, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FLOAT, false, 0, 0); // May need to adjust stride
+            __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribPointer(this.attrTranslate, 3, __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].FLOAT, false, 0, 0);
             __WEBPACK_IMPORTED_MODULE_1__globals__["a" /* gl */].vertexAttribDivisor(this.attrTranslate, 1); // Advance 1 index in translate VBO for each drawn instance
         }
         d.bindIdx();
@@ -15278,16 +15655,115 @@ class ShaderProgram {
 
 
 /***/ }),
-/* 67 */
-/***/ (function(module, exports) {
+/* 68 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = "#version 300 es\r\n\r\nuniform mat4 u_ViewProj;\r\nuniform float u_Time;\r\n\r\nuniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)\r\n// gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;\r\n\r\nin vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place\r\nin vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color\r\nin vec3 vs_Translate; // Another instance rendering attribute used to position each quad instance in the scene\r\n\r\nout vec4 fs_Col;\r\nout vec4 fs_Pos;\r\n\r\nvoid main()\r\n{\r\n    fs_Col = vs_Col;\r\n    fs_Pos = vs_Pos;\r\n\r\n    vec3 offset = vs_Translate;\r\n    offset.z = (sin((u_Time + offset.x) * 3.14159 * 0.1) + cos((u_Time + offset.y) * 3.14159 * 0.1)) * 1.5;\r\n\r\n    vec3 billboardPos = offset + vs_Pos.x * u_CameraAxes[0] + vs_Pos.y * u_CameraAxes[1];\r\n\r\n    gl_Position = u_ViewProj * vec4(billboardPos, 1.0);\r\n}\r\n"
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_gl_matrix__ = __webpack_require__(1);
+
+// class to load obj files for purpose of particle hw
+// only need to know vertices and normals for purpose of the lsystem
+class objLoader {
+    constructor() {
+        this.reader = new FileReader();
+        this.vertices = new Array();
+        this.extraVertices = new Array();
+    }
+    parse(filePath) {
+        let file = " ";
+        var rawFile = new XMLHttpRequest();
+        rawFile.open("GET", filePath, false);
+        rawFile.onreadystatechange = function () {
+            if (rawFile.readyState === 4) {
+                if (rawFile.status === 200 || rawFile.status == 0) {
+                    file = rawFile.responseText;
+                    return file;
+                }
+            }
+        };
+        rawFile.send(null);
+        return file;
+    }
+    load(filePath) {
+        let file;
+        this.vertices = new Array();
+        this.extraVertices = new Array();
+        file = this.parse(filePath);
+        var lines = file.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var chunks = line.split(" ");
+            if (chunks[0] == "v") {
+                this.vertices.push([parseFloat(chunks[1]), parseFloat(chunks[2]), parseFloat(chunks[3]), 1]);
+            }
+            else if (chunks[0] == "f") {
+                var face = [];
+                // split each chunk by / to obtain just the vertex order for indices
+                for (let j = 1; j < chunks.length; j++) {
+                    var data = chunks[j].split("/");
+                    face.push(data[0]);
+                }
+                //triangulate faces and add random point in middle of each triangle to list of vertices
+                //triangle 1
+                this.addNewVertex(this.vertices[parseInt(face[0]) - 1], this.vertices[parseInt(face[1]) - 1], this.vertices[parseInt(face[2]) - 1]);
+                if (face.length > 3) {
+                    this.addNewVertex(this.vertices[parseInt(face[0]) - 1], this.vertices[parseInt(face[2]) - 1], this.vertices[parseInt(face[3]) - 1]);
+                }
+            }
+        }
+        this.vertices = this.vertices.concat(this.extraVertices);
+    }
+    // add a new vertex within a triangle
+    addNewVertex(a, b, c) {
+        let A = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(a[0], a[1], a[2]);
+        let B = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(b[0], b[1], b[2]);
+        let C = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(c[0], c[1], c[2]);
+        let r1 = Math.random();
+        let r2 = Math.random();
+        let x = (1 - Math.sqrt(r1)) * A[0] + (Math.sqrt(r1) * (1 - r2)) * B[0] + (Math.sqrt(r1) * r2) * C[0];
+        let y = (1 - Math.sqrt(r1)) * A[1] + (Math.sqrt(r1) * (1 - r2)) * B[1] + (Math.sqrt(r1) * r2) * C[1];
+        let z = this.zInterp(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(x, y, 0), A, B, C);
+        this.extraVertices.push([x, y, z]);
+    }
+    getPositions() {
+        return this.vertices;
+    }
+    // returns properly interpolated z coordinate of p within triangle made of p1, p2, p3
+    zInterp(p, p1, p2, p3) {
+        let s = this.getArea(p1, p2, p3);
+        let s1 = this.getArea(p, p2, p3);
+        let s2 = this.getArea(p, p3, p1);
+        let s3 = this.getArea(p, p1, p2);
+        let z = 1 / (s1 / (p1[2] * s) + s2 / (p2[2] * s) + s3 / (p3[2] * s));
+        return z;
+    }
+    // returns area of triangle made of p1, p2, p3
+    getArea(p1, p2, p3) {
+        let u1 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        let u2 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(u1, p1, p2);
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(u2, p3, p2);
+        u1[2] = u2[2] = 0;
+        let prod = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
+        __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].cross(prod, u1, u2);
+        let area = 0.5 * __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].length(prod);
+        return area;
+    }
+}
+/* harmony default export */ __webpack_exports__["a"] = (objLoader);
+
 
 /***/ }),
-/* 68 */
+/* 69 */
 /***/ (function(module, exports) {
 
-module.exports = "#version 300 es\r\nprecision highp float;\r\n\r\nin vec4 fs_Col;\r\nin vec4 fs_Pos;\r\n\r\nout vec4 out_Col;\r\n\r\nvoid main()\r\n{\r\n    float dist = 1.0 - (length(fs_Pos.xyz) * 2.0);\r\n    out_Col = vec4(dist) * fs_Col;\r\n}\r\n"
+module.exports = "#version 300 es\n\nuniform mat4 u_ViewProj;\nuniform float u_Time;\n\nuniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)\n// gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;\n\nin vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place\nin vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color\nin vec3 vs_Translate; // Another instance rendering attribute used to position each quad instance in the scene\n\nout vec4 fs_Col;\nout vec4 fs_Pos;\n\nvoid main()\n{\n    fs_Col = vs_Col;\n    fs_Pos = vs_Pos;\n\n    vec3 offset = vs_Translate;\n    offset.z -= 10.0;\n    //offset.z = (sin((u_Time + offset.x) * 3.14159 * 0.1) + cos((u_Time + offset.y) * 3.14159 * 0.1)) * 1.5;\n\n    vec3 billboardPos = offset + vs_Pos.x * u_CameraAxes[0] + vs_Pos.y * u_CameraAxes[1];\n\n    gl_Position = u_ViewProj * vec4(billboardPos, 1.0);\n}\n"
+
+/***/ }),
+/* 70 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Col;\nin vec4 fs_Pos;\n\nout vec4 out_Col;\n\nvoid main()\n{\n    float dist = 1.0 - (length(fs_Pos.xyz) * 2.0);\n    out_Col = vec4(dist) * fs_Col;\n}\n"
 
 /***/ })
 /******/ ]);
